@@ -463,6 +463,73 @@ async def delete_source(request: Request, source_id: int, db: Session = Depends(
 async def get_modal_add_source(request: Request, provider: str):
     return templates.TemplateResponse(request=request, name="partials/modal_add_source.html", context={"request": request, "provider": provider})
 
+@router.get("/modal/edit_source/{source_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def get_modal_edit_source(request: Request, source_id: int, db: Session = Depends(get_db)):
+    source = db.query(models.Source).filter(models.Source.id == source_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+    
+    import json
+    config = {}
+    if source.config:
+        config = json.loads(source.config)
+        
+    if source.provider == 'smb' and config.get('path', '').startswith('smb://'):
+        import re
+        m = re.match(r'smb://(?:(.*?):(.*?)@)?([^/]+)/(.*)', config['path'])
+        if m:
+            config['user'] = m.group(1) or ""
+            config['pass'] = m.group(2) or ""
+            config['host'] = m.group(3) or ""
+            config['path'] = m.group(4) or ""
+
+    return templates.TemplateResponse(request=request, name="partials/modal_edit_source.html", context={
+        "request": request, 
+        "provider": source.provider,
+        "source": source,
+        "config": config
+    })
+
+@router.put("/sources/{source_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def edit_source(
+    request: Request,
+    source_id: int,
+    name: str = Form(...),
+    provider: str = Form(...),
+    config_url: str = Form(""),
+    config_path: str = Form(""),
+    smb_host: str = Form(""),
+    smb_path: str = Form(""),
+    smb_user: str = Form(""),
+    smb_pass: str = Form(""),
+    db: Session = Depends(get_db)
+):
+    source = db.query(models.Source).filter(models.Source.id == source_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+        
+    import json
+    config_dict = {}
+    
+    if provider == 'smb' and smb_host and smb_path:
+        smb_path = smb_path.strip('/')
+        auth_part = f"{smb_user}:{smb_pass}@" if smb_user or smb_pass else ""
+        config_path = f"smb://{auth_part}{smb_host}/{smb_path}"
+        
+    if config_url:
+        config_dict["url"] = config_url
+    if config_path:
+        config_dict["path"] = config_path
+        
+    source.name = name
+    source.provider = provider
+    source.config = json.dumps(config_dict) if config_dict else None
+    
+    db.commit()
+    
+    sources = db.query(models.Source).all()
+    return templates.TemplateResponse(request=request, name="partials/sources.html", context={"request": request, "sources": sources})
+
 @router.get("/sources/{source_id}/browse", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def browse_source(request: Request, source_id: int, db: Session = Depends(get_db)):
     source = db.query(models.Source).filter(models.Source.id == source_id).first()

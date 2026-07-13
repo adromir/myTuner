@@ -20,8 +20,7 @@
  
  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
  {% for source in sources %}
- <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex flex-col hover:border-primary/50 transition-colors cursor-pointer group"
- hx-get="/admin/sources/{{ source.id }}/browse" hx-target="#main-content" hx-swap="outerHTML">
+ <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex flex-col group">
  <div class="flex items-center gap-3 mb-2">
  <span class="material-symbols-outlined text-primary text-3xl">
  {% if source.provider =='m3u' %}queue_music
@@ -31,10 +30,16 @@
  {% else %}folder{% endif %}
  </span>
  <h3 class="font-bold text-on-surface truncate flex-1">{{ source.name }}</h3>
- <button class="p-1 text-on-surface-variant hover:text-error rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
- hx-delete="/admin/sources/{{ source.id }}" hx-confirm="Delete this source?" hx-target="#main-content" hx-swap="innerHTML" @click.stop>
+ <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+ <button class="p-1 text-on-surface-variant hover:text-primary rounded-md"
+ hx-get="/admin/modal/edit_source/{{ source.id }}" hx-target="body" hx-swap="beforeend">
+ <span class="material-symbols-outlined text-sm">edit</span>
+ </button>
+ <button class="p-1 text-on-surface-variant hover:text-error rounded-md"
+ hx-delete="/admin/sources/{{ source.id }}" hx-confirm="Delete this source?" hx-target="#main-content" hx-swap="innerHTML">
  <span class="material-symbols-outlined text-sm">delete</span>
  </button>
+ </div>
  </div>
  <p class="text-xs text-on-surface-variant uppercase tracking-wider">{{ source.provider }}</p>
  </div>
