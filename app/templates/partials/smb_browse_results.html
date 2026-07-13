@@ -1,0 +1,36 @@
+{% if error %}
+<div class="p-3 bg-error-container text-on-error-container rounded-lg text-sm">
+ <span class="font-bold">Error:</span> {{ error }}
+</div>
+{% else %}
+<form hx-post="/admin/smb/add" hx-target="body" @submit="setTimeout(() => open = false, 100)">
+ {% if parent_id %}<input type="hidden" name="parent_id" value="{{ parent_id }}">{% endif %}
+ <input type="hidden" name="smb_url" value="{{ smb_url }}">
+ 
+ <p class="text-body-sm font-bold mb-2 text-on-surface">Select directories to add:</p>
+ <div class="max-h-48 overflow-y-auto border border-outline-variant rounded-lg p-2 bg-surface-container-low">
+ {% for directory in directories %}
+ <label class="flex items-center gap-2 p-1.5 hover:bg-surface-container-high rounded cursor-pointer">
+ <input type="checkbox" name="selected_dirs" value="{{ directory }}" class="rounded border-outline-variant text-primary focus:ring-primary/20">
+ <span class="material-symbols-outlined text-primary text-sm">folder</span>
+ <span class="text-sm text-on-surface">{{ directory }}</span>
+ </label>
+ {% else %}
+ <p class="text-sm text-on-surface-variant italic p-2">No directories found or empty share.</p>
+ {% endfor %}
+ </div>
+
+ <div class="mt-4 flex items-center justify-between">
+ <label class="flex items-center gap-2 text-sm text-on-surface">
+ <input type="checkbox" name="use_transcoding" class="rounded border-outline-variant text-primary">
+ Use FFmpeg Transcoding
+ </label>
+ <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold disabled:opacity-50" {% if not directories %}disabled{% endif %}>
+ Add Selected
+ </button>
+ </div>
+</form>
+<script>
+ document.getElementById('smb-loading').classList.add('hidden');
+</script>
+{% endif %}

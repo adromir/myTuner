@@ -1,0 +1,52 @@
+{% macro render_node(node, selected_node_id) %}
+<div x-data="{ expanded: $persist({% if node.id == selected_node_id %}true{% else %}false{% endif %}).as('tree_{{ node.id }}'), drag: false }"
+ {% if node.provider in ['folder','local_dir','smb'] %}
+ @dragover.prevent.stop="$event.dataTransfer.dropEffect ='copy'; drag = true"
+ @dragenter.prevent.stop="drag = true"
+ @dragleave.prevent.stop="if (!$event.currentTarget.contains($event.relatedTarget)) drag = false"
+ @drop.stop.prevent="drag = false; handleDrop($event, {{ node.id }})"
+ {% endif %}>
+ <div @click="if (!$event.target.closest('button')) expanded = !expanded"
+ class="drop-zone flex items-center justify-between group cursor-pointer py-2 hover:bg-surface-container-high rounded px-2 -ml-2 transition-all border-2 {% if node.id == selected_node_id %}bg-surface-container-high font-bold{% endif %}"
+ :class="drag ?'border-primary bg-primary-container/20' :'border-transparent'">
+ <div class="flex items-center gap-2 pointer-events-none">
+ {% if node.children %}
+ <span class="material-symbols-outlined text-on-surface-variant text-lg transition-transform duration-200" :class="expanded ?'rotate-90' :''" data-icon="chevron_right">chevron_right</span>
+ {% else %}
+ <span class="material-symbols-outlined text-on-surface-variant text-lg opacity-0" data-icon="remove">remove</span>
+ {% endif %}
+ 
+ {% if node.provider =='folder' %}
+ <span class="material-symbols-outlined text-primary" data-icon="folder" style="font-variation-settings:'FILL' 1;" x-text="expanded ?'folder_open' :'folder'">folder</span>
+ {% elif node.provider =='local_dir' %}
+ <span class="material-symbols-outlined text-tertiary" data-icon="hard_drive" style="font-variation-settings:'FILL' 1;">hard_drive</span>
+ {% elif node.provider =='smb' %}
+ <span class="material-symbols-outlined text-secondary" data-icon="lan" style="font-variation-settings:'FILL' 1;">lan</span>
+ {% else %}
+ <span class="material-symbols-outlined text-on-surface-variant" data-icon="dns">dns</span>
+ {% endif %}
+ <span class="font-medium text-on-surface text-body-md group-hover:text-primary transition-colors">{{ node.name }}</span>
+ </div>
+ 
+ <div class="opacity-0 group-hover:opacity-100 flex items-center">
+ <button hx-get="/admin/modal/add?provider=folder&parent_id={{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Add Subfolder">
+ <span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+ </button>
+ <button hx-get="/admin/modal/edit/{{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Edit">
+ <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+ </button>
+ <button hx-delete="/admin/nodes/{{ node.id }}" hx-confirm="Are you sure you want to delete this node?" hx-target="#explorer-tree" hx-select="#explorer-tree" hx-swap="outerHTML" class="text-on-surface-variant hover:text-error transition-colors p-1" title="Delete">
+ <span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+ </button>
+ </div>
+ </div>
+ 
+ {% if node.children %}
+ <div x-show="expanded" x-collapse x-cloak class="ml-8 mt-1 space-y-2 border-l border-outline/50 pl-4 relative">
+ {% for child in node.children %}
+ {{ render_node(child, selected_node_id) }}
+ {% endfor %}
+ </div>
+ {% endif %}
+</div>
+{% endmacro %}

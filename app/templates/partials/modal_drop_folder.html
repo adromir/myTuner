@@ -1,0 +1,35 @@
+<div id="modal-backdrop-drop-folder" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open">
+ <div class="bg-surface rounded-xl shadow-lg w-[400px] p-6 max-h-[90vh] overflow-y-auto" @click.away="open = false">
+ <h2 class="text-headline-md mb-4 text-on-surface">Add Folder: {{ title }}</h2>
+ 
+ <form hx-post="/admin/nodes/drop_confirm" hx-target="body" @submit="setTimeout(() => open = false, 100)">
+ <input type="hidden" name="parent_id" value="{{ parent_id }}">
+ <input type="hidden" name="title" value="{{ title }}">
+ <input type="hidden" name="path" value="{{ path }}">
+ <input type="hidden" name="stream_url" value="{{ stream_url }}">
+
+ <div class="mb-4 space-y-3">
+ <label class="flex items-start gap-3 cursor-pointer group">
+ <input type="radio" name="folder_type" value="dynamic" checked class="mt-1">
+ <div>
+ <div class="text-on-surface font-bold">Dynamic Folder</div>
+ <div class="text-sm text-on-surface-variant">The receiver will see all individual audio files inside this folder.</div>
+ </div>
+ </label>
+ 
+ <label class="flex items-start gap-3 cursor-pointer group">
+ <input type="radio" name="folder_type" value="continuous" class="mt-1">
+ <div>
+ <div class="text-on-surface font-bold">Continuous Stream</div>
+ <div class="text-sm text-on-surface-variant">Combines all audio files into a single, continuous stream using FFmpeg.</div>
+ </div>
+ </label>
+ </div>
+
+ <div class="flex justify-end gap-2 mt-6">
+ <button type="button" @click="open = false" class="px-4 py-2 text-on-surface hover:bg-surface-variant rounded-lg">Cancel</button>
+ <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg">Add Folder</button>
+ </div>
+ </form>
+ </div>
+</div>

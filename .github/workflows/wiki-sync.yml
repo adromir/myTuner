@@ -1,0 +1,48 @@
+name: Sync Docs to Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+# Grant the GITHUB_TOKEN permission to push to the repository and wiki
+permissions:
+  contents: write
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+
+      - name: Checkout Wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-repo
+          # Note: If the wiki hasn't been initialized yet (no first page created),
+          # this step will fail. You must create at least one page in the Wiki via the GitHub UI first.
+
+      - name: Sync docs to wiki
+        run: |
+          # Use rsync to copy docs exactly as they are, deleting removed files from the wiki
+          rsync -av --delete --exclude '.git' ./main-repo/docs/ ./wiki-repo/
+          
+          cd ./wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          
+          # Only commit and push if there are changes
+          if git diff-index --quiet HEAD; then
+            echo "No changes to commit to Wiki."
+          else
+            git commit -m "docs: auto-sync from main repository docs folder"
+            git push
+          fi

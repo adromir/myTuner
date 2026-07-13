@@ -1,0 +1,35 @@
+<div id="modal-backdrop-fs" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })">
+ <div class="bg-surface rounded-xl shadow-lg w-[500px] h-[600px] flex flex-col" @click.away="open = false">
+ 
+ <div class="p-4 border-b border-outline-variant/30 shrink-0">
+ <h2 class="text-headline-sm font-display text-on-surface mb-2">Select Directory</h2>
+ <div class="text-xs font-mono bg-surface-container-high px-2 py-1 rounded truncate text-on-surface-variant">{{ current_path }}</div>
+ </div>
+
+ <div class="flex-1 overflow-y-auto p-2">
+ {% if parent_path %}
+ <button hx-get="/admin/fs/browse?path={{ parent_path }}&target_id={{ target_id }}" hx-target="#modal-backdrop-fs" hx-swap="outerHTML" class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
+ <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">arrow_upward</span>
+ <span class="text-body-md font-medium text-on-surface">..</span>
+ </button>
+ {% endif %}
+
+ {% for dir in directories %}
+ <button hx-get="/admin/fs/browse?path={{ dir.path }}&target_id={{ target_id }}" hx-target="#modal-backdrop-fs" hx-swap="outerHTML" class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
+ <span class="material-symbols-outlined text-primary" style="font-variation-settings:'FILL' 1;">folder</span>
+ <span class="text-body-md font-medium text-on-surface">{{ dir.name }}</span>
+ </button>
+ {% else %}
+ <div class="p-4 text-center text-on-surface-variant text-sm">
+ No subdirectories found.
+ </div>
+ {% endfor %}
+ </div>
+
+ <div class="p-4 border-t border-outline-variant/30 flex justify-end gap-2 shrink-0">
+ <button type="button" @click="open = false" class="px-4 py-2 text-on-surface hover:bg-surface-variant rounded-lg">Cancel</button>
+ <button type="button" @click="document.getElementById('{{ target_id }}').value ='{{ current_path|replace('\\','\\\\') }}'; open = false" class="px-4 py-2 bg-primary text-on-primary rounded-lg">Select This Folder</button>
+ </div>
+
+ </div>
+</div>

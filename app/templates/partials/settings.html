@@ -1,0 +1,94 @@
+<div class="col-span-12 flex flex-col gap-6">
+ <div class="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-8 flex-1 flex flex-col">
+ <h2 class="text-display font-display text-on-surface mb-6">Settings</h2>
+ 
+ <div class="max-w-2xl">
+ <h3 class="text-headline-md mb-4 text-primary">Registered Clients</h3>
+ 
+ <!-- List of existing clients -->
+ <div class="mb-6 space-y-2">
+ {% if clients %}
+ {% for client in clients %}
+ <div class="flex items-center justify-between p-3 bg-surface-container rounded-lg border border-outline-variant/50">
+ <div class="flex items-center gap-3">
+ <div class="w-10 h-10 rounded-full flex items-center justify-center text-on-primary" style="background-color: {{ client.color }};">
+ <span class="material-symbols-outlined">{{ client.icon }}</span>
+ </div>
+ <div>
+ <div class="font-bold text-on-surface">{{ client.name }}</div>
+ <div class="text-xs text-on-surface-variant font-mono">{{ client.mac_address }}</div>
+ </div>
+ </div>
+ <button hx-delete="/admin/settings/client/{{ client.id }}" hx-target="#main-content" hx-swap="outerHTML" class="text-error hover:bg-error-container/20 p-2 rounded-full transition-colors">
+ <span class="material-symbols-outlined text-sm">delete</span>
+ </button>
+ </div>
+ {% endfor %}
+ {% else %}
+ <div class="text-on-surface-variant text-body-sm italic">No clients registered yet.</div>
+ {% endif %}
+ </div>
+
+ <!-- Form to add new client -->
+ <form hx-post="/admin/settings/client" hx-target="#main-content" hx-swap="outerHTML" class="bg-surface-container-high p-4 rounded-xl border border-outline-variant/30">
+ <h4 class="text-title-md text-on-surface mb-4">Add New Client</h4>
+ <div class="grid grid-cols-2 gap-4 mb-4">
+ <div>
+ <label class="block text-body-sm font-bold mb-1 text-on-surface">Client Name</label>
+ <input type="text" name="name" required placeholder="e.g. Living Room TV" class="w-full px-3 py-2 border rounded-lg">
+ </div>
+ <div>
+ <label class="block text-body-sm font-bold mb-1 text-on-surface">MAC Address</label>
+ <input type="text" name="mac_address" required placeholder="AA:BB:CC:DD:EE:FF" class="w-full px-3 py-2 border rounded-lg uppercase font-mono">
+ </div>
+ </div>
+ <div class="grid grid-cols-2 gap-4 mb-4">
+ <div>
+ <label class="block text-body-sm font-bold mb-1 text-on-surface">Icon</label>
+ <select name="icon" class="w-full px-3 py-2 border rounded-lg font-sans">
+ <option value="devices">Devices (Default)</option>
+ <option value="tv">Television</option>
+ <option value="smartphone">Smartphone</option>
+ <option value="tablet">Tablet</option>
+ <option value="speaker">Speaker</option>
+ <option value="computer">Computer</option>
+ <option value="cast">Chromecast</option>
+ <option value="car_play">Car</option>
+ </select>
+ </div>
+ <div>
+ <label class="block text-body-sm font-bold mb-1 text-on-surface">Color</label>
+ <div class="flex items-center gap-2">
+ <input type="color" name="color" value="#3b82f6" class="h-10 w-16 p-1 border rounded-lg cursor-pointer">
+ <span class="text-body-sm text-on-surface-variant">Pick a brand color</span>
+ </div>
+ </div>
+ </div>
+ <div class="flex justify-end">
+ <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg shadow-sm flex items-center gap-2">
+ <span class="material-symbols-outlined text-sm">add</span> Add Client
+ </button>
+ </div>
+ </form>
+ 
+ <hr class="my-8 border-outline-variant/30">
+ 
+ <h3 class="text-headline-md mb-4 text-primary">System Information</h3>
+ <p class="text-on-surface-variant mb-4"><strong>Database Path:</strong> ./data/mytuner.db</p>
+ 
+ <form hx-post="/admin/settings/system" hx-target="#main-content" hx-swap="outerHTML" class="bg-surface-container-high p-4 rounded-xl border border-outline-variant/30">
+ <h4 class="text-title-md text-on-surface mb-4">Network Settings</h4>
+ <div class="mb-4">
+ <label class="block text-body-sm font-bold mb-1 text-on-surface">myTuner Host URL (for FFmpeg Streaming)</label>
+ <p class="text-xs text-on-surface-variant mb-2">Leave empty to auto-detect. Only set this if your receiver has trouble playing transcoded streams (e.g. set to <code class="bg-surface-container px-1 py-0.5 rounded">http://192.168.1.50:8000</code>).</p>
+ <input type="text" name="host_url" value="{{ host_url }}" placeholder="http://192.168.1.123:8000" class="w-full px-3 py-2 border rounded-lg font-mono text-sm">
+ </div>
+ <div class="flex justify-end">
+ <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg shadow-sm">
+ Save System Settings
+ </button>
+ </div>
+ </form>
+ </div>
+ </div>
+</div>

@@ -1,0 +1,64 @@
+{% if error %}
+<div class="p-3 bg-error-container text-on-error-container rounded-lg text-sm">
+ <span class="font-bold">Error:</span> {{ error }}
+</div>
+{% else %}
+<form hx-post="/admin/{{ btype }}/add" hx-target="body" @submit="setTimeout(() => open = false, 100)">
+ {% if parent_id %}<input type="hidden" name="parent_id" value="{{ parent_id }}">{% endif %}
+ <input type="hidden" name="base_url" value="{{ base_url }}">
+ <input type="hidden" name="current_path" value="{{ current_path }}">
+ <input type="hidden" name="smb_user" value="{{ smb_user }}">
+ <input type="hidden" name="smb_pass" value="{{ smb_pass }}">
+ 
+ <div class="flex items-center gap-2 mb-2 bg-surface-container-highest p-2 rounded-lg text-sm">
+ <span class="material-symbols-outlined text-sm">folder_open</span>
+ <span class="font-mono text-xs break-all flex-1">{{ base_url }}{{ current_path }}</span>
+ </div>
+
+ <p class="text-body-sm font-bold mb-2 text-on-surface">Click folder to browse, or check box to select:</p>
+ <div class="max-h-64 overflow-y-auto border border-outline-variant rounded-lg p-2 bg-surface-container-low">
+ 
+ {% if current_path and current_path !='/' and current_path !='\\' %}
+ <div class="flex items-center gap-2 p-1.5 hover:bg-surface-container-high rounded cursor-pointer group" 
+ hx-post="/admin/{{ btype }}/browse_path" 
+ hx-target="#{{ btype }}-results" 
+ hx-include="[name='base_url'], [name='smb_user'], [name='smb_pass']"
+ hx-vals='{"target_path":"{{ parent_path }}"}'>
+ <div class="w-4"></div>
+ <span class="material-symbols-outlined text-primary text-sm">arrow_upward</span>
+ <span class="text-sm text-on-surface group-hover:text-primary transition-colors">.. (Up one level)</span>
+ </div>
+ {% endif %}
+
+ {% for directory in directories %}
+ <div class="flex items-center gap-2 p-1.5 hover:bg-surface-container-high rounded group">
+ <input type="checkbox" name="selected_dirs" value="{{ directory }}" class="rounded border-outline-variant text-primary focus:ring-primary/20">
+ 
+ <div class="flex items-center gap-2 cursor-pointer flex-1" 
+ hx-post="/admin/{{ btype }}/browse_path" 
+ hx-target="#{{ btype }}-results" 
+ hx-include="[name='base_url'], [name='smb_user'], [name='smb_pass']"
+ hx-vals='{"target_path":"{{ current_path }}{% if btype =='smb' %}\\{% else %}/{% endif %}{{ directory }}"}'>
+ <span class="material-symbols-outlined text-primary text-sm">folder</span>
+ <span class="text-sm text-on-surface group-hover:text-primary transition-colors">{{ directory }}</span>
+ </div>
+ </div>
+ {% else %}
+ <p class="text-sm text-on-surface-variant italic p-2">No directories found or empty share.</p>
+ {% endfor %}
+ </div>
+
+ <div class="mt-4 flex items-center justify-between">
+ <label class="flex items-center gap-2 text-sm text-on-surface">
+ <input type="checkbox" name="use_transcoding" class="rounded border-outline-variant text-primary">
+ Use FFmpeg Transcoding
+ </label>
+ <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-bold disabled:opacity-50" {% if not directories and not current_path %}disabled{% endif %}>
+ Add Selected
+ </button>
+ </div>
+</form>
+<script>
+ document.getElementById('{{ btype }}-loading').classList.add('hidden');
+</script>
+{% endif %}

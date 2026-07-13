@@ -1,0 +1,50 @@
+<div id="main-content" class="col-span-12 lg:col-span-9 flex flex-col gap-6">
+ <div class="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-8 flex-1">
+ <h2 class="text-display font-display text-on-surface mb-6">Analytics</h2>
+ 
+ <div class="grid grid-cols-3 gap-6 mb-8">
+ <div class="bg-primary/10 border border-primary/20 rounded-xl p-4">
+ <p class="text-on-surface-variant font-semibold text-sm">Total Streams</p>
+ <p class="text-3xl font-bold text-primary mt-2">24</p>
+ </div>
+ <div class="bg-secondary-container/30 border border-secondary/20 rounded-xl p-4">
+ <p class="text-on-surface-variant font-semibold text-sm">Active Listeners</p>
+ <p class="text-3xl font-bold text-secondary mt-2">1</p>
+ </div>
+ <div class="bg-tertiary-container/30 border border-tertiary/20 rounded-xl p-4">
+ <p class="text-on-surface-variant font-semibold text-sm">Uptime</p>
+ <p class="text-3xl font-bold text-tertiary mt-2">99.9%</p>
+ </div>
+ </div>
+ 
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ <div class="bg-surface-container h-64 rounded-xl flex items-center justify-center border border-outline-variant/30 relative overflow-hidden">
+ <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-primary/20 to-transparent"></div>
+ <div class="flex items-end gap-2 px-6 pb-4 w-full h-full opacity-50">
+ <!-- Fake bars -->
+ <div class="w-8 h-[30%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[50%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[40%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[80%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[60%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[90%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[100%] bg-primary rounded-t"></div>
+ <div class="w-8 h-[70%] bg-primary rounded-t"></div>
+ </div>
+ <p class="absolute top-4 left-6 text-on-surface-variant font-bold">Listener Traffic (24h)</p>
+ </div>
+ 
+ <div class="bg-surface-container rounded-xl border border-outline-variant/30 p-4">
+ <p class="text-on-surface-variant font-bold mb-4">Recent Access Logs (Simulated)</p>
+ <div class="space-y-2 font-mono text-xs text-on-surface-variant h-48 overflow-hidden">
+ <p>192.168.1.102 - - [13/Jul/2026:14:12:01]"GET /stream/4 HTTP/1.1" 200</p>
+ <p>192.168.1.105 - - [13/Jul/2026:14:15:33]"GET /vtuner/xml HTTP/1.1" 200</p>
+ <p>192.168.1.102 - - [13/Jul/2026:14:20:11]"GET /stream/4 HTTP/1.1" 206</p>
+ <p>192.168.1.110 - - [13/Jul/2026:14:25:00]"GET /podcast/12 HTTP/1.1" 200</p>
+ <p>192.168.1.102 - - [13/Jul/2026:14:28:45]"GET /stream/4 HTTP/1.1" 200</p>
+ <p>192.168.1.102 - - [13/Jul/2026:14:30:12]"GET /stream/4 HTTP/1.1" 206</p>
+ </div>
+ </div>
+ </div>
+ </div>
+</div>

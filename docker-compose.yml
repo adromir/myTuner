@@ -1,0 +1,11 @@
+services:
+  mytuner:
+    build: .
+    container_name: mytuner
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Europe/Berlin

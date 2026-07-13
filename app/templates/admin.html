@@ -1,0 +1,153 @@
+{% extends"base.html" %}
+
+{% block title %}Admin - μTuner{% endblock %}
+
+{% block body %}
+
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-screen w-[260px] bg-surface-container-low border-r border-outline-variant flex flex-col py-4 z-50">
+<div class="px-6 mb-8">
+<h1 class="font-display text-display font-bold text-primary">μTuner</h1>
+<p class="text-on-surface-variant font-body-sm opacity-70">Admin Console</p>
+</div>
+
+<nav class="flex-1 space-y-1 overflow-y-auto px-3">
+<a @click="activeTab ='dashboard'" :class="activeTab ==='dashboard' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/" hx-target="body" hx-push-url="true">
+<span class="material-symbols-outlined" data-icon="playlist_play">playlist_play</span>
+<span>Playlists</span>
+</a>
+<a @click="activeTab ='sources'" :class="activeTab ==='sources' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/sources" hx-target="#main-content" hx-swap="innerHTML">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span>Sources</span>
+</a>
+<a @click="activeTab ='profile'" :class="activeTab ==='profile' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/profile" hx-target="#main-content" hx-swap="innerHTML">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Profile</span>
+</a>
+<a @click="activeTab ='settings'" :class="activeTab ==='settings' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/settings" hx-target="#main-content" hx-swap="innerHTML">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-3 pt-4 border-t border-outline-variant/30">
+<button class="w-full flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant transition-all rounded-lg" onclick="document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ?'dark' :'light'; this.querySelector('span').textContent = document.documentElement.classList.contains('dark') ?'light_mode' :'dark_mode';">
+<span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+<span>Appearance</span>
+</button>
+<div class="flex items-center gap-3 px-3 py-4 mt-2">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20 bg-surface-container-highest">
+<img class="w-full h-full object-cover" src="/admin/avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23666\'><path d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-on-surface font-semibold truncate">Admin User</p>
+<p class="text-on-surface-variant text-[10px] uppercase tracking-wider">Root Access</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-6 z-40">
+<div class="flex items-center gap-6">
+<div class="relative group">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center text-on-surface-variant pointer-events-none group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="search">search</span>
+</span>
+<input class="pl-10 pr-4 py-1.5 w-64 bg-surface-container-low border-none rounded-full text-body-md focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search nodes or streams..." type="text" name="q" hx-get="/admin/search" hx-trigger="keyup changed delay:500ms" hx-target="#main-content" hx-swap="innerHTML"/>
+</div>
+<nav class="hidden md:flex items-center gap-6 text-body-md font-medium">
+<a @click="activeTab ='dashboard'" :class="activeTab ==='dashboard' ?'text-primary border-b-2 border-primary pb-1' :'text-on-surface-variant hover:text-primary transition-colors pb-1'" class="cursor-pointer" hx-get="/admin/" hx-target="body" hx-push-url="true">Dashboard</a>
+<a @click="activeTab ='logs'" :class="activeTab ==='logs' ?'text-primary border-b-2 border-primary pb-1' :'text-on-surface-variant hover:text-primary transition-colors pb-1'" class="cursor-pointer" hx-get="/admin/logs" hx-target="#main-content" hx-swap="innerHTML">Logs</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button hx-get="/admin/modal/preview" hx-target="body" hx-swap="beforeend" class="px-3 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="visibility">visibility</span> Preview XML
+</button>
+<a @click="activeTab ='profile'" hx-get="/admin/profile" hx-target="#main-content" hx-swap="innerHTML" class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</a>
+<a href="/admin/logout" class="p-2 text-on-surface-variant hover:bg-error-container/20 hover:text-error rounded-full transition-colors ml-2" title="Logout">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+</a>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[260px] mt-16 p-6 min-h-[calc(100vh-64px)] overflow-hidden">
+<div id="main-content" class="max-w-[1600px] mx-auto grid grid-cols-12 gap-6 h-full items-stretch">
+{% include"partials/main_content.html" %}
+</div>
+</main>
+
+<script>
+function handleDrop(event, parentId) {
+ event.preventDefault();
+ const dataStr = event.dataTransfer.getData("application/json");
+ if (!dataStr) return;
+ 
+ try {
+ const item = JSON.parse(dataStr);
+ // Call backend to process the drop
+ const formData = new FormData();
+ formData.append('parent_id', parentId);
+ formData.append('type', item.type);
+ formData.append('title', item.title);
+ formData.append('stream_url', item.stream_url ||'');
+ formData.append('image_url', item.image_url ||'');
+ formData.append('path', item.path ||'');
+ 
+ fetch('/admin/nodes/drop', {
+ method:'POST',
+ body: formData
+ }).then(response => {
+ if (response.redirected) {
+ htmx.ajax('GET','/admin/', {target:'#explorer-tree', select:'#explorer-tree', swap:'outerHTML'});
+ } else if (response.ok) {
+ return response.text().then(html => {
+ // Check if the backend sent a modal back
+ if (html.includes('id="modal-backdrop')) {
+ document.body.insertAdjacentHTML('beforeend', html);
+ htmx.process(document.body);
+ } else {
+ htmx.ajax('GET','/admin/', {target:'#explorer-tree', select:'#explorer-tree', swap:'outerHTML'});
+ }
+ });
+ }
+ });
+ } catch (e) {
+ console.error("Drop parsing error", e);
+ }
+}
+
+let explorerScrollTop = 0;
+document.addEventListener('htmx:beforeRequest', function(e) {
+ const explorer = document.getElementById('explorer-tree');
+ if (explorer && e.detail.elt.id !=='explorer-tree') {
+ explorerScrollTop = explorer.scrollTop;
+ }
+});
+document.addEventListener('htmx:afterSettle', function(e) {
+ const explorer = document.getElementById('explorer-tree');
+ if (explorer && explorerScrollTop > 0) {
+ explorer.scrollTop = explorerScrollTop;
+ }
+});
+
+window.handleDragStart = function(event) {
+ const el = event.currentTarget;
+ event.dataTransfer.setData("application/json", JSON.stringify({
+ type: el.dataset.itemType,
+ title: el.dataset.title,
+ stream_url: el.dataset.streamUrl,
+ image_url: el.dataset.imageUrl,
+ path: el.dataset.path
+ }));
+ event.dataTransfer.effectAllowed ="copy";
+ document.body.classList.add('dragging-active');
+};
+
+document.addEventListener('dragend', function() {
+ document.body.classList.remove('dragging-active');
+});
+</script>
+{% endblock %}

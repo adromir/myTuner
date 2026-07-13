@@ -1,0 +1,39 @@
+{% extends"base.html" %}
+
+{% block title %}Login - μTuner{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-surface">
+ <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-8 shadow-lg max-w-md w-full">
+ <div class="text-center mb-8">
+ <h1 class="font-display text-display font-bold text-primary">μTuner</h1>
+ <p class="text-on-surface-variant font-body-sm opacity-70">Admin Console Login</p>
+ </div>
+ 
+ {% if error %}
+ <div class="bg-error-container text-on-error-container p-3 rounded-lg mb-6 text-sm">
+ {{ error }}
+ </div>
+ {% endif %}
+ 
+ <form method="POST" action="/admin/login">
+ <div class="mb-6">
+ <label class="block text-body-sm font-bold mb-2 text-on-surface">Password</label>
+ <input type="password" name="password" required autofocus class="w-full px-4 py-3 border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 transition-all">
+ <p class="text-xs text-on-surface-variant mt-2">Default is'admin' on first run.</p>
+ </div>
+ 
+ <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 px-4 rounded-xl hover:bg-primary-container transition-colors shadow-sm">
+ Login
+ </button>
+ </form>
+ 
+ <div class="mt-6 flex justify-center">
+ <button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-all text-sm" id="theme-toggle">
+ <span class="material-symbols-outlined text-lg" data-icon="dark_mode">dark_mode</span>
+ <span>Toggle Theme</span>
+ </button>
+ </div>
+ </div>
+</div>
+{% endblock %}

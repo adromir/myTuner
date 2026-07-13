@@ -1,0 +1,62 @@
+<!-- Left Column: Tree View Navigation -->
+<section id="explorer-tree" class="col-span-12 lg:col-span-3 bg-surface-container-lowest border border-outline/50 rounded-2xl p-5 flex flex-col h-[calc(100vh-120px)] sticky top-[88px] overflow-y-auto overflow-x-hidden">
+ <div class="flex items-center justify-between mb-6">
+ <h3 class="font-headline-md text-headline-md text-on-surface">Explorer</h3>
+ <button hx-get="/admin/modal/add?provider=folder" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1 bg-surface-container-high rounded-lg border border-outline-variant/30" title="Add Root Folder">
+ <span class="material-symbols-outlined text-sm" data-icon="create_new_folder">create_new_folder</span>
+ </button>
+ </div>
+ <div class="space-y-4">
+ {% from'partials/tree_item.html' import render_node %}
+ {% for node in all_nodes if node.parent_id is none %}
+ {{ render_node(node, selected_node.id if selected_node else None) }}
+ {% endfor %}
+ </div>
+</section>
+
+<!-- Right Column: Source Browser -->
+<div id="sources-list" class="col-span-12 lg:col-span-9 flex flex-col gap-6">
+ <!-- Source Browser Area (Collapsible Accordions) -->
+ <div class="bg-surface-container-lowest border border-outline/50 rounded-2xl flex-1 flex flex-col overflow-hidden h-[calc(100vh-280px)]">
+ <div class="p-4 border-b border-outline-variant/30 bg-surface-container-high flex items-center gap-2 text-on-surface-variant text-sm shrink-0">
+ <span class="material-symbols-outlined text-lg">info</span>
+ <span>Drag items from the sources below into the Explorer tree on the left.</span>
+ </div>
+ 
+ <div class="flex-1 overflow-y-auto p-4 space-y-3">
+ {% for source in sources %}
+ <div x-data="{ expanded: false, loaded: false }" class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface-container">
+ <button @click="expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET','/admin/sources/{{ source.id }}/items', {target:'#source-body-{{ source.id }}'}); loaded = true; }" class="w-full p-4 flex items-center justify-between hover:bg-surface-variant transition-colors text-left focus:outline-none">
+ <div class="flex items-center gap-3">
+ <span class="material-symbols-outlined text-primary">source</span>
+ <span class="font-bold text-on-surface">{{ source.name }}</span>
+ <span class="text-xs text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded-full">{{ source.provider | upper }}</span>
+ </div>
+ <span class="material-symbols-outlined transition-transform duration-200" :class="expanded ?'rotate-180' :''">expand_more</span>
+ </button>
+ <div x-show="expanded" x-collapse x-cloak>
+ <div id="source-body-{{ source.id }}" class="p-3 bg-surface-container-lowest border-t border-outline-variant/30 max-h-[400px] overflow-y-auto space-y-1">
+ <div class="flex items-center justify-center p-4">
+ <span class="material-symbols-outlined animate-spin">sync</span>
+ <span class="ml-2 text-on-surface-variant">Loading items...</span>
+ </div>
+ </div>
+ </div>
+ </div>
+ {% else %}
+ <div class="p-8 text-center text-on-surface-variant bg-surface-container rounded-xl">
+ <span class="material-symbols-outlined text-4xl mb-2">inventory_2</span>
+ <p>No sources available. Add a source in the Sources tab first.</p>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+</div>
+
+<style>
+ body.dragging-active .drop-zone * {
+ pointer-events: none !important;
+ }
+</style>
+
+

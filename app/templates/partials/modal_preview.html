@@ -1,0 +1,59 @@
+<div id="modal-backdrop-preview" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" x-data="{ 
+ open: true, 
+ selectedMac:'' 
+}" x-show="open">
+ <div class="bg-surface rounded-xl shadow-lg w-[400px] p-6 max-h-[90vh] overflow-y-auto" @click.away="open = false">
+ <div class="flex items-center gap-3 mb-4">
+ <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+ <span class="material-symbols-outlined">visibility</span>
+ </div>
+ <div>
+ <h2 class="text-headline-md text-on-surface">Preview XML List</h2>
+ <p class="text-xs text-on-surface-variant">{% if node %}Folder: {{ node.name }}{% else %}Root Directory{% endif %}</p>
+ </div>
+ </div>
+ 
+ <p class="text-body-sm text-on-surface-variant mb-6">
+ Test the generated XML output exactly as your receiver will see it. Select a client below to simulate how MAC address filters will apply.
+ </p>
+
+ <div class="mb-6 space-y-2">
+ <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors has-[:checked]:bg-primary-container/20 has-[:checked]:border-primary">
+ <input type="radio" name="preview_mac" value="" x-model="selectedMac" class="hidden">
+ <div class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant bg-surface-variant">
+ <span class="material-symbols-outlined text-[16px]">public</span>
+ </div>
+ <div class="flex-1">
+ <div class="text-body-sm font-bold text-on-surface">No Client (Anonymous)</div>
+ <div class="text-[10px] text-on-surface-variant">View as an unregistered device</div>
+ </div>
+ <span class="material-symbols-outlined text-primary opacity-0" :class="{'opacity-100': selectedMac ==='' }">check_circle</span>
+ </label>
+
+ {% for client in clients %}
+ <label class="flex items-center gap-3 p-3 border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors has-[:checked]:bg-primary-container/20 has-[:checked]:border-primary">
+ <input type="radio" name="preview_mac" value="{{ client.mac_address }}" x-model="selectedMac" class="hidden">
+ <div class="w-8 h-8 rounded-full flex items-center justify-center text-on-primary" style="background-color: {{ client.color }};">
+ <span class="material-symbols-outlined text-[16px]">{{ client.icon }}</span>
+ </div>
+ <div class="flex-1">
+ <div class="text-body-sm font-bold text-on-surface">{{ client.name }}</div>
+ <div class="text-[10px] text-on-surface-variant font-mono">{{ client.mac_address }}</div>
+ </div>
+ <span class="material-symbols-outlined text-primary opacity-0" :class="{'opacity-100': selectedMac ==='{{ client.mac_address }}' }">check_circle</span>
+ </label>
+ {% endfor %}
+ </div>
+ 
+ <div class="flex justify-end gap-2 mt-6">
+ <button type="button" @click="open = false" class="px-4 py-2 text-on-surface hover:bg-surface-variant rounded-lg">Cancel</button>
+ <a :href="`{% if node %}/setupapp/yamaha/asp/browseXML/navXML.asp?node_id={{ node.id }}{% else %}/setupapp/yamaha/asp/browseXML/loginXML.asp{% endif %}${selectedMac ?'{% if node %}&{% else %}?{% endif %}mac=' + selectedMac :''}`" 
+ target="_blank" 
+ @click="open = false" 
+ class="px-4 py-2 bg-primary text-on-primary rounded-lg flex items-center gap-2">
+ Open XML
+ <span class="material-symbols-outlined text-sm">open_in_new</span>
+ </a>
+ </div>
+ </div>
+</div>

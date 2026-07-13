@@ -1,0 +1,50 @@
+<div class="col-span-12 flex flex-col gap-6">
+ <div class="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-8 flex-1 flex flex-col">
+ <div class="flex items-center justify-between mb-6">
+ <h2 class="text-display font-display text-on-surface">Content Sources</h2>
+ <div class="flex gap-2">
+ <button hx-get="/admin/modal/add_source?provider=m3u" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
+ Add M3U
+ </button>
+ <button hx-get="/admin/modal/add_source?provider=podcast" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
+ Add RSS-Podcast
+ </button>
+ <button hx-get="/admin/modal/add_source?provider=local_dir" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
+ Add Local Dir
+ </button>
+ <button hx-get="/admin/modal/add_source?provider=smb" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
+ Add SMB
+ </button>
+ </div>
+ </div>
+ 
+ <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+ {% for source in sources %}
+ <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex flex-col hover:border-primary/50 transition-colors cursor-pointer group"
+ hx-get="/admin/sources/{{ source.id }}/browse" hx-target="#main-content" hx-swap="outerHTML">
+ <div class="flex items-center gap-3 mb-2">
+ <span class="material-symbols-outlined text-primary text-3xl">
+ {% if source.provider =='m3u' %}queue_music
+ {% elif source.provider =='podcast' %}podcasts
+ {% elif source.provider =='local_dir' %}hard_drive
+ {% elif source.provider =='smb' %}dns
+ {% else %}folder{% endif %}
+ </span>
+ <h3 class="font-bold text-on-surface truncate flex-1">{{ source.name }}</h3>
+ <button class="p-1 text-on-surface-variant hover:text-error rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+ hx-delete="/admin/sources/{{ source.id }}" hx-confirm="Delete this source?" hx-target="#main-content" hx-swap="innerHTML" @click.stop>
+ <span class="material-symbols-outlined text-sm">delete</span>
+ </button>
+ </div>
+ <p class="text-xs text-on-surface-variant uppercase tracking-wider">{{ source.provider }}</p>
+ </div>
+ {% else %}
+ <div class="col-span-full py-12 text-center border-2 border-dashed border-outline-variant/50 rounded-xl">
+ <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">library_add</span>
+ <h3 class="text-on-surface font-bold mb-1">No Sources Found</h3>
+ <p class="text-on-surface-variant text-sm">Add an M3U, Podcast, SMB share, or Local Directory to begin.</p>
+ </div>
+ {% endfor %}
+ </div>
+ </div>
+</div>

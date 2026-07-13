@@ -1,0 +1,63 @@
+<div class="col-span-12 flex flex-col gap-6">
+<div class="flex items-center justify-between mb-4">
+ <div class="flex items-center gap-3">
+ <button hx-get="/admin/sources" hx-target="#main-content" hx-swap="outerHTML" class="p-2 hover:bg-surface-variant rounded-full text-on-surface transition-colors">
+ <span class="material-symbols-outlined">arrow_back</span>
+ </button>
+ <h2 class="text-headline-md font-display text-on-surface">Browsing: {{ source.name }}</h2>
+ </div>
+ <span class="text-sm text-on-surface-variant bg-surface-variant px-3 py-1 rounded-full">{{ source.provider | upper }}</span>
+</div>
+
+<div class="bg-surface-container border border-outline-variant/30 rounded-xl overflow-hidden flex flex-col h-[600px]">
+ <div class="p-3 bg-surface-container-high border-b border-outline-variant/30 flex items-center gap-2 text-sm text-on-surface-variant">
+ <span class="material-symbols-outlined text-sm">info</span>
+ <span>Drag items from this list onto any folder in the Explorer tree on the left.</span>
+ </div>
+ 
+ <div id="source-items-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+ {% for item in items %}
+ <div class="source-drag-item flex items-center gap-3 p-3 bg-surface-container-lowest hover:bg-surface-variant rounded-lg border border-outline-variant/20 cursor-grab active:cursor-grabbing transition-colors"
+ draggable="true"
+ data-item-type="{{ item.type }}"
+ data-title="{{ item.title }}"
+ data-stream-url="{{ item.stream_url or'' }}"
+ data-image-url="{{ item.image_url or'' }}"
+ data-path="{{ item.path or'' }}"
+ ondragstart="handleDragStart(event)">
+ 
+ <div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center overflow-hidden shrink-0">
+ {% if item.image_url %}
+ <img src="{{ item.image_url }}" class="w-full h-full object-cover">
+ {% elif item.type =='Dir' or item.type =='Folder' %}
+ <span class="material-symbols-outlined text-primary">folder</span>
+ {% elif item.type =='Podcast' %}
+ <span class="material-symbols-outlined text-primary">podcasts</span>
+ {% else %}
+ <span class="material-symbols-outlined text-primary">audiotrack</span>
+ {% endif %}
+ </div>
+ 
+ <div class="flex-1 min-w-0">
+ <p class="text-on-surface font-medium truncate">{{ item.title }}</p>
+ {% if item.stream_url %}
+ <p class="text-xs text-on-surface-variant truncate">{{ item.stream_url }}</p>
+ {% elif item.path %}
+ <p class="text-xs text-on-surface-variant truncate">{{ item.path }}</p>
+ {% endif %}
+ </div>
+ 
+ <div class="shrink-0 text-on-surface-variant opacity-50">
+ <span class="material-symbols-outlined">drag_indicator</span>
+ </div>
+ </div>
+ {% else %}
+ <div class="p-8 text-center text-on-surface-variant">
+ <span class="material-symbols-outlined text-4xl mb-2">search_off</span>
+ <p>No items found in this source.</p>
+ </div>
+ {% endfor %}
+ </div>
+</div>
+
+</div>
