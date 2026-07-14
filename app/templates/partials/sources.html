@@ -3,18 +3,13 @@
  <div class="flex items-center justify-between mb-6">
  <h2 class="text-display font-display text-on-surface">Content Sources</h2>
  <div class="flex gap-2">
- <button hx-get="/admin/modal/add_source?provider=m3u" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
- Add M3U
+ {% for p in get_all_providers() %}
+ {% if p.allow_as_source %}
+ <button hx-get="/admin/modal/add_source?provider={{ p.id }}" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
+ Add {{ p.name }}
  </button>
- <button hx-get="/admin/modal/add_source?provider=podcast" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
- Add RSS-Podcast
- </button>
- <button hx-get="/admin/modal/add_source?provider=local_dir" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
- Add Local Dir
- </button>
- <button hx-get="/admin/modal/add_source?provider=smb" hx-target="body" hx-swap="beforeend" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors text-sm">
- Add SMB
- </button>
+ {% endif %}
+ {% endfor %}
  </div>
  </div>
  
@@ -23,11 +18,8 @@
  <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex flex-col group">
  <div class="flex items-center gap-3 mb-2">
  <span class="material-symbols-outlined text-primary text-3xl">
- {% if source.provider =='m3u' %}queue_music
- {% elif source.provider =='podcast' %}podcasts
- {% elif source.provider =='local_dir' %}hard_drive
- {% elif source.provider =='smb' %}dns
- {% else %}folder{% endif %}
+ {% set provider_inst = get_provider(source.provider) %}
+ {% if provider_inst %}{{ provider_inst.icon }}{% else %}folder{% endif %}
  </span>
  <h3 class="font-bold text-on-surface truncate flex-1">{{ source.name }}</h3>
  <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -6,13 +6,15 @@
 <form hx-post="/admin/{{ btype }}/add" hx-target="body" @submit="setTimeout(() => open = false, 100)">
  {% if parent_id %}<input type="hidden" name="parent_id" value="{{ parent_id }}">{% endif %}
  <input type="hidden" name="base_url" value="{{ base_url }}">
+ <input type="hidden" name="smb_host" value="{{ smb_host }}">
+ <input type="hidden" name="smb_path" value="{{ smb_path }}">
  <input type="hidden" name="current_path" value="{{ current_path }}">
  <input type="hidden" name="smb_user" value="{{ smb_user }}">
  <input type="hidden" name="smb_pass" value="{{ smb_pass }}">
  
  <div class="flex items-center gap-2 mb-2 bg-surface-container-highest p-2 rounded-lg text-sm">
  <span class="material-symbols-outlined text-sm">folder_open</span>
- <span class="font-mono text-xs break-all flex-1">{{ base_url }}{{ current_path }}</span>
+ <span class="font-mono text-xs break-all flex-1">{{ base_url }}{% if current_path %}\{{ current_path }}{% endif %}</span>
  </div>
 
  <p class="text-body-sm font-bold mb-2 text-on-surface">Click folder to browse, or check box to select:</p>
@@ -22,7 +24,7 @@
  <div class="flex items-center gap-2 p-1.5 hover:bg-surface-container-high rounded cursor-pointer group" 
  hx-post="/admin/{{ btype }}/browse_path" 
  hx-target="#{{ btype }}-results" 
- hx-include="[name='base_url'], [name='smb_user'], [name='smb_pass']"
+ hx-include="[name='base_url'], [name='smb_host'], [name='smb_path'], [name='smb_user'], [name='smb_pass']"
  hx-vals='{"target_path":"{{ parent_path }}"}'>
  <div class="w-4"></div>
  <span class="material-symbols-outlined text-primary text-sm">arrow_upward</span>
@@ -37,7 +39,7 @@
  <div class="flex items-center gap-2 cursor-pointer flex-1" 
  hx-post="/admin/{{ btype }}/browse_path" 
  hx-target="#{{ btype }}-results" 
- hx-include="[name='base_url'], [name='smb_user'], [name='smb_pass']"
+ hx-include="[name='base_url'], [name='smb_host'], [name='smb_path'], [name='smb_user'], [name='smb_pass']"
  hx-vals='{"target_path":"{{ current_path }}{% if btype =='smb' %}\\{% else %}/{% endif %}{{ directory }}"}'>
  <span class="material-symbols-outlined text-primary text-sm">folder</span>
  <span class="text-sm text-on-surface group-hover:text-primary transition-colors">{{ directory }}</span>

@@ -1,5 +1,7 @@
 /Concept.md
 /MEMORY.md
 /myTuner.db
-/data/mytuner.db
-/data/mytuner.log
+mytuner.db
+mytuner.log
+mytuner.log.*
+data/mytuner.log.1

@@ -8,7 +8,6 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;family=Geist:wght@400;600;700;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
  .material-symbols-outlined {
  font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
@@ -187,8 +186,8 @@
             --color-on-error: #ffffff;
             --color-error-container: #ffdad6;
             --color-on-error-container: #93000a;
-            --color-outline: #767586;
-            --color-outline-variant: #c7c4d7;
+            --color-outline: #4c4b5b;
+            --color-outline-variant: #8c899d;
             --color-surface-tint: #494bd6;
         }
         .dark {
@@ -240,14 +239,14 @@
             --color-outline-variant: #464554;
             --color-surface-tint: #c0c1ff;
         }
-        input, select, textarea {
+        [type='text'], [type='password'], [type='email'], [type='number'], [type='url'], [type='date'], [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='time'], [type='week'], [multiple], textarea, select, input {
             background-color: var(--color-surface-container-highest) !important;
             color: var(--color-on-surface) !important;
             border-color: var(--color-outline-variant) !important;
         }
         input::placeholder, textarea::placeholder {
-            color: var(--color-on-surface-variant) !important;
-            opacity: 0.7 !important;
+            color: var(--color-on-surface-variant);
+            opacity: 0.7;
         }
     </style>
 </head>

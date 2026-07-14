@@ -1,6 +1,13 @@
 <div id="modal-backdrop-smb" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })">
  <div class="bg-surface rounded-xl shadow-lg w-[500px] p-6 max-h-[90vh] overflow-hidden flex flex-col" @click.away="open = false">
  <h2 class="text-headline-md mb-4 text-on-surface">Browse SMB Share</h2>
+ <form id="smb-modal-browse-form">
+     <input type="hidden" name="smb_host" value="{{ smb_host }}">
+     <input type="hidden" name="smb_path" value="{{ smb_path }}">
+     <input type="hidden" name="smb_user" value="{{ smb_user }}">
+     <input type="hidden" name="smb_pass" value="{{ smb_pass }}">
+     <input type="hidden" name="base_url" value="{{ base_url }}">
+     <input type="hidden" name="target_id" value="{{ target_id }}">
  
  <div class="flex items-center gap-2 mb-4 bg-surface-container-highest p-2 rounded-lg text-sm text-on-surface-variant">
  <span class="material-symbols-outlined text-sm">lan</span>
@@ -17,7 +24,7 @@
  {% if current_path %}
  {% set parent_path = current_path.rsplit('\\', 1)[0] if '\\' in current_path else '' %}
  <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb" hx-swap="outerHTML" 
- hx-vals='{"smb_host": "{{ smb_host }}", "smb_path": "{{ smb_path }}", "smb_user": "{{ smb_user }}", "smb_pass": "{{ smb_pass }}", "base_url": "{{ base_url }}", "target_path": "{{ parent_path }}", "target_id": "{{ target_id }}"}'
+ hx-include="#smb-modal-browse-form" hx-vals='{"target_path": "{{ parent_path }}"}'
  class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
  <span class="material-symbols-outlined text-primary group-hover:-translate-y-1 transition-transform">arrow_upward</span>
  <span class="text-body-sm text-on-surface font-medium">.. (Up one level)</span>
@@ -26,7 +33,7 @@
 
  {% for dir in directories %}
  <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb" hx-swap="outerHTML"
- hx-vals='{"smb_host": "{{ smb_host }}", "smb_path": "{{ smb_path }}", "smb_user": "{{ smb_user }}", "smb_pass": "{{ smb_pass }}", "base_url": "{{ base_url }}", "target_path": "{{ current_path }}{% if current_path %}\\{% endif %}{{ dir }}", "target_id": "{{ target_id }}"}'
+ hx-include="#smb-modal-browse-form" hx-vals='{"target_path": "{{ current_path }}{% if current_path %}\\{% endif %}{{ dir }}"}'
  class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
  <span class="material-symbols-outlined text-primary">folder</span>
  <span class="text-body-sm text-on-surface">{{ dir }}</span>
@@ -44,5 +51,6 @@
  Select This Folder
  </button>
  </div>
+ </form>
  </div>
 </div>

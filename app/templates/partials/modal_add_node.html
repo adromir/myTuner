@@ -6,12 +6,8 @@ x-data="{
 }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })">
  <div class="bg-surface rounded-xl shadow-lg w-[400px] p-6 max-h-[90vh] overflow-y-auto" @click.away="open = false">
  <h2 class="text-headline-md mb-4 text-on-surface">
- {% if provider =='folder' %}Add Category (Folder)
- {% elif provider =='local_dir' %}Add Local Directory
- {% elif provider =='smb' %}Add SMB Share
- {% elif provider =='podcast' %}Add RSS-Podcast
- {% elif provider =='m3u' %}Add M3U Playlist
- {% else %}Add Web Stream{% endif %}
+ {% set provider_inst = get_provider(provider) %}
+ Add {% if provider_inst %}{{ provider_inst.name }}{% else %}{{ provider }}{% endif %}
  </h2>
  
  <form hx-post="/admin/nodes/" hx-target="#explorer-tree" hx-select="#explorer-tree" hx-swap="outerHTML" @submit="setTimeout(() => open = false, 100)">
@@ -20,33 +16,32 @@ x-data="{
 
  <div class="mb-4">
  <label class="block text-body-sm font-bold mb-2 text-on-surface">Name</label>
- <input type="text" name="name" required class="w-full px-3 py-2 border rounded-lg">
+ <input type="text" name="name" required class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface">
  </div>
 
  <div class="mb-4">
  <label class="block text-body-sm font-bold mb-2 text-on-surface">Cover Image URL (Optional)</label>
- <input type="text" name="image_url" placeholder="https://..." class="w-full px-3 py-2 border rounded-lg">
+ <input type="text" name="image_url" placeholder="https://..." class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface">
  </div>
 
- {% if provider not in ['folder','local_dir'] %}
+ {% if provider_inst %}
+ {% for field in provider_inst.config_schema %}
  <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Stream/Resource URL</label>
- <input type="text" name="config_url" class="w-full px-3 py-2 border rounded-lg">
- </div>
- {% endif %}
-
- {% if provider in ['smb','local_dir'] %}
- <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Path / Address</label>
+ <label class="block text-body-sm font-bold mb-2 text-on-surface">{{ field.label }}</label>
+ {% if field.type == "local_path" %}
  <div class="flex gap-2">
- <input type="text" name="config_path" id="config_path_input_node_{{ parent_id|default('0') }}" class="w-full px-3 py-2 border rounded-lg" {% if provider =='smb' %}placeholder="smb://user:pass@host/share"{% else %}placeholder="/media/audio"{% endif %}>
- {% if provider =='local_dir' %}
- <button type="button" hx-get="/admin/fs/browse?target_id=config_path_input_node_{{ parent_id|default('0') }}" hx-target="body" hx-swap="beforeend" class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
+ <input type="text" name="config_{{ field.name }}" id="config_{{ field.name }}_input_node_{{ parent_id|default('0') }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ <button type="button" hx-get="/admin/fs/browse?target_id=config_{{ field.name }}_input_node_{{ parent_id|default('0') }}" hx-target="body" hx-swap="beforeend" class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
  <span class="material-symbols-outlined text-sm">folder_open</span> Browse
  </button>
+ </div>
+ {% elif field.type == "password" %}
+ <input type="password" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ {% else %}
+ <input type="text" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
  {% endif %}
  </div>
- </div>
+ {% endfor %}
  {% endif %}
 
  <div class="mb-4">

@@ -19,12 +19,9 @@
  {% if node.image_url %}
  <img src="{{ node.image_url }}" alt="Cover" class="w-6 h-6 object-cover rounded shadow-sm shrink-0">
  {% else %}
- {% if node.provider =='folder' %}
- <span class="material-symbols-outlined text-primary" data-icon="folder" style="font-variation-settings:'FILL' 1;" x-text="expanded ?'folder_open' :'folder'">folder</span>
- {% elif node.provider =='local_dir' %}
- <span class="material-symbols-outlined text-tertiary" data-icon="hard_drive" style="font-variation-settings:'FILL' 1;">hard_drive</span>
- {% elif node.provider =='smb' %}
- <span class="material-symbols-outlined text-secondary" data-icon="lan" style="font-variation-settings:'FILL' 1;">lan</span>
+ {% set provider_inst = get_provider(node.provider) %}
+ {% if provider_inst %}
+ <span class="material-symbols-outlined text-primary" data-icon="{{ provider_inst.icon }}" style="font-variation-settings:'FILL' 1;" {% if node.provider == 'folder' %}x-text="expanded ? 'folder_open' : 'folder'"{% endif %}>{{ provider_inst.icon }}</span>
  {% else %}
  <span class="material-symbols-outlined text-on-surface-variant" data-icon="dns">dns</span>
  {% endif %}
@@ -33,9 +30,13 @@
  </div>
  
  <div class="opacity-0 group-hover:opacity-100 flex items-center">
- <button hx-get="/admin/modal/add?provider=folder&parent_id={{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Add Subfolder">
- <span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+ {% for p in get_all_providers() %}
+ {% if p.allow_as_node %}
+ <button hx-get="/admin/modal/add?provider={{ p.id }}&parent_id={{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Add {{ p.name }}">
+ <span class="material-symbols-outlined text-sm" data-icon="{{ p.icon }}">{{ p.icon }}</span>
  </button>
+ {% endif %}
+ {% endfor %}
  <button hx-get="/admin/modal/edit/{{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Edit">
  <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
  </button>

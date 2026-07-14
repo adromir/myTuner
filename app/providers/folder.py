@@ -1,25 +1,23 @@
 from typing import List, Dict, Any
 from .base import MediaProvider
 
-class WebStreamProvider(MediaProvider):
+class FolderProvider(MediaProvider):
     @property
-    def id(self) -> str: return "web_stream"
+    def id(self) -> str: return "folder"
     @property
-    def name(self) -> str: return "Web Stream"
+    def name(self) -> str: return "Category (Folder)"
     @property
-    def icon(self) -> str: return "add_link"
+    def icon(self) -> str: return "folder"
     @property
     def allow_as_source(self) -> bool: return False
     @property
     def allow_as_node(self) -> bool: return True
     @property
     def config_schema(self) -> List[Dict[str, Any]]:
-        return [
-            {"name": "url", "label": "Stream URL", "type": "text", "required": True, "placeholder": "http://..."}
-        ]
+        return []
 
     def get_stream_url(self, config: Dict[str, Any]) -> str:
-        return config.get("url", "")
+        return ""
     
     def browse_folder(self, config: Dict[str, Any], node_id: int) -> List[Dict[str, Any]]:
         return []

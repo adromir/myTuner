@@ -34,11 +34,14 @@ def verify_admin(request: Request, db: Session = Depends(get_db)):
     # Let's just use a static token stored in the database, or just rely on the 'authenticated' cookie value since the user is in their local network.
     # For slightly better security, we will store a random session token in settings.
     session_setting = db.query(models.Settings).filter(models.Settings.key == "session_token").first()
+    expiry_setting = db.query(models.Settings).filter(models.Settings.key == "session_expiry").first()
     
     is_authenticated = False
     if session_setting and session_token:
         if session_setting.value == session_token:
-            is_authenticated = True
+            import time
+            if expiry_setting and expiry_setting.value and int(time.time()) < int(expiry_setting.value):
+                is_authenticated = True
             
     if not is_authenticated:
         if "hx-request" in request.headers:

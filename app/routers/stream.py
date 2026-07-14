@@ -28,7 +28,7 @@ async def stream_media(request: Request, node_id: str, db: Session = Depends(get
     if node.provider_config:
         try:
             config = json.loads(node.provider_config)
-        except:
+        except (json.JSONDecodeError, TypeError):
             config = {"url": node.provider_config, "path": node.provider_config}
             
     # Allow the provider to resolve the exact URL (it might need the full node_id for dynamic items)

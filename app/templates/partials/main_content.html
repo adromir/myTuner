@@ -2,9 +2,15 @@
 <section id="explorer-tree" class="col-span-12 lg:col-span-3 bg-surface-container-lowest border border-outline/50 rounded-2xl p-5 flex flex-col h-[calc(100vh-120px)] sticky top-[88px] overflow-y-auto overflow-x-hidden">
  <div class="flex items-center justify-between mb-6">
  <h3 class="font-headline-md text-headline-md text-on-surface">Explorer</h3>
- <button hx-get="/admin/modal/add?provider=folder" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1 bg-surface-container-high rounded-lg border border-outline-variant/30" title="Add Root Folder">
- <span class="material-symbols-outlined text-sm" data-icon="create_new_folder">create_new_folder</span>
+ <div class="flex gap-2">
+ {% for p in get_all_providers() %}
+ {% if p.allow_as_node %}
+ <button hx-get="/admin/modal/add?provider={{ p.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1 bg-surface-container-high rounded-lg border border-outline-variant/30" title="Add {{ p.name }}">
+ <span class="material-symbols-outlined text-sm" data-icon="{{ p.icon }}">{{ p.icon }}</span>
  </button>
+ {% endif %}
+ {% endfor %}
+ </div>
  </div>
  <div class="space-y-4">
  {% from'partials/tree_item.html' import render_node %}
@@ -26,14 +32,31 @@
  <div class="flex-1 overflow-y-auto p-4 space-y-3">
  {% for source in sources %}
  <div x-data="{ expanded: false, loaded: false }" class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface-container">
- <button @click="expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET','/admin/sources/{{ source.id }}/items', {target:'#source-body-{{ source.id }}'}); loaded = true; }" class="w-full p-4 flex items-center justify-between hover:bg-surface-variant transition-colors text-left focus:outline-none">
- <div class="flex items-center gap-3">
+ <div class="w-full p-4 flex items-center justify-between hover:bg-surface-variant transition-colors text-left focus:outline-none"
+ {% if source.provider in ['m3u', 'podcast'] %}
+ draggable="true"
+ data-item-type="Source"
+ data-title="{{ source.name }}"
+ data-source-id="{{ source.id }}"
+ data-source-provider="{{ source.provider }}"
+ ondragstart="handleDragStart(event)"
+ class="cursor-grab active:cursor-grabbing"
+ title="Drag this entire source into the Explorer tree"
+ {% endif %}>
+ <button @click="expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET','/admin/sources/{{ source.id }}/items', {target:'#source-body-{{ source.id }}'}); loaded = true; }" class="flex-1 flex items-center gap-3">
  <span class="material-symbols-outlined text-primary">source</span>
  <span class="font-bold text-on-surface">{{ source.name }}</span>
  <span class="text-xs text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded-full">{{ source.provider | upper }}</span>
- </div>
+ </button>
+ <div class="flex items-center gap-2">
+ {% if source.provider in ['m3u', 'podcast'] %}
+ <span class="material-symbols-outlined text-on-surface-variant/50 hover:text-on-surface-variant cursor-grab shrink-0 text-sm mr-2" title="Drag me!">drag_indicator</span>
+ {% endif %}
+ <button @click="expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET','/admin/sources/{{ source.id }}/items', {target:'#source-body-{{ source.id }}'}); loaded = true; }">
  <span class="material-symbols-outlined transition-transform duration-200" :class="expanded ?'rotate-180' :''">expand_more</span>
  </button>
+ </div>
+ </div>
  <div x-show="expanded" x-collapse x-cloak>
  <div id="source-body-{{ source.id }}" class="p-3 bg-surface-container-lowest border-t border-outline-variant/30 max-h-[400px] overflow-y-auto space-y-1">
  <div class="flex items-center justify-center p-4">

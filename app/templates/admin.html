@@ -95,6 +95,8 @@ function handleDrop(event, parentId) {
  formData.append('stream_url', item.stream_url ||'');
  formData.append('image_url', item.image_url ||'');
  formData.append('path', item.path ||'');
+ formData.append('source_id', item.source_id ||'');
+ formData.append('source_provider', item.source_provider ||'');
  
  fetch('/admin/nodes/drop', {
  method:'POST',
@@ -140,7 +142,9 @@ window.handleDragStart = function(event) {
  title: el.dataset.title,
  stream_url: el.dataset.streamUrl,
  image_url: el.dataset.imageUrl,
- path: el.dataset.path
+ path: el.dataset.path,
+ source_id: el.dataset.sourceId,
+ source_provider: el.dataset.sourceProvider
  }));
  event.dataTransfer.effectAllowed ="copy";
  document.body.classList.add('dragging-active');

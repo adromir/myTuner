@@ -63,6 +63,18 @@ class Source(Base):
     name = Column(String, index=True, nullable=False)
     provider = Column(String, nullable=False) # 'm3u', 'podcast', 'smb', 'local'
     config = Column(String, nullable=True) # JSON containing url or path
+    
+    cache = relationship("SourceCache", back_populates="source", cascade="all, delete-orphan", uselist=False)
+
+class SourceCache(Base):
+    __tablename__ = "source_cache"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(Integer, ForeignKey('sources.id', ondelete="CASCADE"), unique=True, index=True, nullable=False)
+    data = Column(String, nullable=False) # JSON list of items
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    source = relationship("Source", back_populates="cache")
 
 class Client(Base):
     __tablename__ = "clients"

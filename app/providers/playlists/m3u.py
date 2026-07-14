@@ -1,12 +1,58 @@
 from typing import List, Dict, Any
 from ..base import MediaProvider
+import logging
 import urllib.request
 
+logger = logging.getLogger(__name__)
+
 class M3UProvider(MediaProvider):
+    @property
+    def id(self) -> str: return "m3u"
+    @property
+    def name(self) -> str: return "M3U Playlist"
+    @property
+    def icon(self) -> str: return "queue_music"
+    @property
+    def allow_as_source(self) -> bool: return True
+    @property
+    def allow_as_node(self) -> bool: return False
+    @property
+    def config_schema(self) -> List[Dict[str, Any]]:
+        return [
+            {"name": "url", "label": "M3U URL", "type": "text", "required": True, "placeholder": "http://..."}
+        ]
+
     def get_stream_url(self, config: Dict[str, Any]) -> str:
         return config.get("stream_url", "")
         
     def browse_folder(self, config: Dict[str, Any], node_id: int) -> List[Dict[str, Any]]:
+        source_id = config.get("source_id")
+        if source_id:
+            from ...database import SessionLocal
+            from ... import models
+            import json
+            db = SessionLocal()
+            try:
+                cache = db.query(models.SourceCache).filter(models.SourceCache.source_id == source_id).first()
+                if cache and cache.data:
+                    # Update IDs dynamically relative to the node
+                    items = json.loads(cache.data)
+                    for idx, item in enumerate(items):
+                        item["id"] = f"{node_id}_{idx}"
+                    return items
+            finally:
+                db.close()
+                
+            # Fallback if not cached but source_id provided
+            db = SessionLocal()
+            try:
+                source = db.query(models.Source).filter(models.Source.id == source_id).first()
+                if source and source.config:
+                    source_config = json.loads(source.config)
+                    config["url"] = source_config.get("url", "")
+            finally:
+                db.close()
+
         items = []
         m3u_url = config.get("url", "")
         if not m3u_url:
@@ -55,6 +101,6 @@ class M3UProvider(MediaProvider):
                     current_logo = None
                     
         except Exception as e:
-            print(f"Error parsing M3U: {e}")
+            logger.error(f"Error parsing M3U: {e}")
             
         return items

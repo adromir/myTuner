@@ -82,7 +82,7 @@ async def mytuner_login(request: Request, brand: str, mac: str = Query(""), db: 
                     cfg = json.loads(node.provider_config) if node.provider_config else {}
                     if "url" in cfg:
                         item_data["stream_url_override"] = cfg["url"]
-                except:
+                except (json.JSONDecodeError, TypeError):
                     pass
             items.append(item_data)
             
@@ -127,7 +127,7 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
                         cfg = json.loads(child.provider_config) if child.provider_config else {}
                         if "url" in cfg:
                             item_data["stream_url_override"] = cfg["url"]
-                    except:
+                    except (json.JSONDecodeError, TypeError):
                         pass
                 items.append(item_data)
     else:
@@ -140,7 +140,7 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
             if node.provider_config:
                 try:
                     config = json.loads(node.provider_config)
-                except:
+                except (json.JSONDecodeError, TypeError):
                     pass
             # Fallback if config is stored as plain string in older version
             if not isinstance(config, dict):

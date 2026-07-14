@@ -1,7 +1,26 @@
 from typing import List, Dict, Any
 from ..base import MediaProvider
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LocalProvider(MediaProvider):
+    @property
+    def id(self) -> str: return "local_dir"
+    @property
+    def name(self) -> str: return "Local Directory"
+    @property
+    def icon(self) -> str: return "hard_drive"
+    @property
+    def allow_as_source(self) -> bool: return True
+    @property
+    def allow_as_node(self) -> bool: return True
+    @property
+    def config_schema(self) -> List[Dict[str, Any]]:
+        return [
+            {"name": "path", "label": "Directory Path", "type": "local_path", "required": True, "placeholder": "/media/music"}
+        ]
+
     def get_stream_url(self, config: Dict[str, Any]) -> str:
         # Expected config: {"path": "/media/music/song.mp3"}
         path = config.get("path", "")
@@ -42,6 +61,6 @@ class LocalProvider(MediaProvider):
                         "path": full_path
                     })
         except Exception as e:
-            print(f"Error browsing local dir {path}: {e}")
+            logger.error(f"Error browsing local dir {path}: {e}")
             
         return items
