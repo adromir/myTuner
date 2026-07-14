@@ -231,6 +231,94 @@ async def get_smb_modal(request: Request, parent_id: int = None):
 
 import os
 
+@router.post("/smb/browse_modal", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def browse_smb_modal(
+    request: Request, 
+    target_id: str = Form(""),
+    smb_host: str = Form(""), 
+    smb_path: str = Form(""), 
+    smb_user: str = Form(""), 
+    smb_pass: str = Form("")
+):
+    import smbclient
+    directories = []
+    error = None
+    
+    smb_path = smb_path.strip('/')
+    auth_part = f"{smb_user}:{smb_pass}@" if smb_user or smb_pass else ""
+    base_url = f"smb://{smb_host}/{smb_path}"
+    
+    try:
+        unc_path = r"\\" + f"{smb_host}\\{smb_path}"
+        unc_path = unc_path.rstrip('\\')
+        
+        if smb_user:
+            smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
+        else:
+            smbclient.register_session(smb_host, username="guest", password="")
+            
+        for entry in smbclient.scandir(unc_path):
+            if entry.is_dir():
+                directories.append(entry.name)
+    except Exception as e:
+        error = f"Failed to connect: {str(e)}"
+        
+    return templates.TemplateResponse(request=request, name="partials/modal_smb_browse.html", context={
+        "request": request,
+        "base_url": base_url,
+        "current_path": "",
+        "target_id": target_id,
+        "directories": sorted(directories),
+        "smb_host": smb_host,
+        "smb_path": smb_path,
+        "smb_user": smb_user,
+        "smb_pass": smb_pass,
+        "error": error
+    })
+
+@router.post("/smb/browse_modal_path", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def browse_smb_modal_path(
+    request: Request, 
+    target_id: str = Form(""),
+    target_path: str = Form(""),
+    base_url: str = Form(""),
+    smb_host: str = Form(""), 
+    smb_path: str = Form(""), 
+    smb_user: str = Form(""), 
+    smb_pass: str = Form("")
+):
+    import smbclient
+    directories = []
+    error = None
+    
+    try:
+        unc_path = r"\\" + f"{smb_host}\\{smb_path}\\{target_path}"
+        unc_path = unc_path.rstrip('\\')
+        
+        if smb_user:
+            smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
+        else:
+            smbclient.register_session(smb_host, username="guest", password="")
+            
+        for entry in smbclient.scandir(unc_path):
+            if entry.is_dir():
+                directories.append(entry.name)
+    except Exception as e:
+        error = f"Failed to connect: {str(e)}"
+        
+    return templates.TemplateResponse(request=request, name="partials/modal_smb_browse.html", context={
+        "request": request,
+        "base_url": base_url,
+        "current_path": target_path,
+        "target_id": target_id,
+        "directories": sorted(directories),
+        "smb_host": smb_host,
+        "smb_path": smb_path,
+        "smb_user": smb_user,
+        "smb_pass": smb_pass,
+        "error": error
+    })
+
 @router.post("/smb/browse_path", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def browse_smb_path(
     request: Request, 

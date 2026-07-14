@@ -18,7 +18,12 @@ os.makedirs('data', exist_ok=True)
 
 # Setup logging to file
 log_file = 'data/mytuner.log'
-file_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=2)
+file_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=5)
+if os.path.exists(log_file):
+    try:
+        file_handler.doRollover()
+    except Exception:
+        pass
 file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 # Get uvicorn loggers

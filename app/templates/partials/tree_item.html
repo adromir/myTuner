@@ -16,6 +16,9 @@
  <span class="material-symbols-outlined text-on-surface-variant text-lg opacity-0" data-icon="remove">remove</span>
  {% endif %}
  
+ {% if node.image_url %}
+ <img src="{{ node.image_url }}" alt="Cover" class="w-6 h-6 object-cover rounded shadow-sm shrink-0">
+ {% else %}
  {% if node.provider =='folder' %}
  <span class="material-symbols-outlined text-primary" data-icon="folder" style="font-variation-settings:'FILL' 1;" x-text="expanded ?'folder_open' :'folder'">folder</span>
  {% elif node.provider =='local_dir' %}
@@ -24,6 +27,7 @@
  <span class="material-symbols-outlined text-secondary" data-icon="lan" style="font-variation-settings:'FILL' 1;">lan</span>
  {% else %}
  <span class="material-symbols-outlined text-on-surface-variant" data-icon="dns">dns</span>
+ {% endif %}
  {% endif %}
  <span class="font-medium text-on-surface text-body-md group-hover:text-primary transition-colors">{{ node.name }}</span>
  </div>
