@@ -84,3 +84,10 @@ class Client(Base):
     mac_address = Column(String, unique=True, index=True, nullable=False)
     icon = Column(String, default="devices") # Material Symbols icon name
     color = Column(String, default="#3b82f6") # Hex color code
+    
+    # Device Profiling
+    last_ip = Column(String, nullable=True)
+    brand = Column(String, nullable=True)
+    supports_search = Column(Boolean, default=False)
+    supports_cover_art = Column(Boolean, default=False)
+    last_seen = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

@@ -20,6 +20,17 @@ async def stream_media(request: Request, node_id: str, db: Session = Depends(get
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
         
+    # MAC-Sensitive History Tracking
+    client_ip = request.client.host
+    client = db.query(models.Client).filter(models.Client.last_ip == client_ip).first()
+    if client:
+        hist = models.History(mac_address=client.mac_address, node_id=node.id)
+        db.add(hist)
+        try:
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            
     provider = get_provider(node.provider)
     if not provider:
         raise HTTPException(status_code=500, detail="Provider not found")

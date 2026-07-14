@@ -91,26 +91,15 @@ class MyCustomProvider(MediaProvider):
         ]
 ```
 
-## Step 2: Register the Provider
+## Step 2: Automatic Discovery
 
-Once your class is written, you need to tell μTuner to load it.
+That's it! You **do not** need to manually register your provider.
 
-1. Open `app/providers/__init__.py`.
-2. Import your new provider.
-3. Add it to the `_providers` dictionary.
+μTuner uses a True Dynamic Plugin System. When the application starts, it automatically scans for classes that inherit from `MediaProvider` and registers them using their `id`.
 
-```python
-# app/providers/__init__.py
-
-from .my_custom_provider import MyCustomProvider
-
-_providers: Dict[str, MediaProvider] = {
-    "web_stream": WebStreamProvider(),
-    "m3u": M3UProvider(),
-    # ... other providers ...
-    "my_custom": MyCustomProvider() # Add your provider here
-}
-```
+You have two options for where to place your provider file:
+1. **Built-in:** Place it inside the `app/providers/` directory (or a subdirectory like `app/providers/my_provider/`).
+2. **External Plugin (Recommended):** Place your `.py` file directly into the `plugins/` folder in the root directory of the project. This is the best way to keep your custom providers safe from being overwritten during updates!
 
 ## How It Works in the UI
 As soon as you register your provider, μTuner will automatically:

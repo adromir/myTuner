@@ -1,0 +1,66 @@
+<div class="col-span-12">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-title-lg font-bold text-on-surface">Registered Clients</h2>
+            <p class="text-on-surface-variant font-body-md mt-1">Automatically profiled devices on your network</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for client in clients %}
+        <div class="bg-surface-container rounded-2xl p-6 border border-outline-variant/30 relative flex flex-col hover:border-primary/50 transition-colors">
+            
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-on-primary shadow-sm" style="background-color: {{ client.color }};">
+                    <span class="material-symbols-outlined text-2xl" data-icon="{{ client.icon }}">{{ client.icon }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-title-md font-bold text-on-surface truncate">{{ client.name }}</h3>
+                    <p class="text-body-sm text-on-surface-variant truncate">{{ client.mac_address }}</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 mb-6 flex-1">
+                <div class="flex items-center justify-between text-body-sm">
+                    <span class="text-on-surface-variant">Last IP</span>
+                    <span class="text-on-surface font-mono bg-surface-container-high px-2 py-1 rounded-md">{{ client.last_ip or 'Unknown' }}</span>
+                </div>
+                <div class="flex items-center justify-between text-body-sm">
+                    <span class="text-on-surface-variant">Brand</span>
+                    <span class="text-on-surface">{{ client.brand or 'Generic AVR' }}</span>
+                </div>
+                <div class="flex items-center justify-between text-body-sm">
+                    <span class="text-on-surface-variant">Last Seen</span>
+                    <span class="text-on-surface">{{ client.last_seen.strftime('%Y-%m-%d %H:%M') if client.last_seen else 'Never' }}</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-6">
+                {% if client.supports_search %}
+                <span class="px-2 py-1 bg-tertiary-container/30 text-on-tertiary-container text-label-md rounded-full border border-tertiary/20 flex items-center gap-1" title="Supports Search">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="search">search</span> Search
+                </span>
+                {% endif %}
+                {% if client.supports_cover_art %}
+                <span class="px-2 py-1 bg-secondary-container/30 text-on-secondary-container text-label-md rounded-full border border-secondary/20 flex items-center gap-1" title="Supports Cover Art">
+                    <span class="material-symbols-outlined text-[14px]" data-icon="image">image</span> Cover Art
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="pt-4 border-t border-outline-variant/30 mt-auto flex justify-end">
+                <button class="px-4 py-2 bg-primary-container text-on-primary-container rounded-lg text-label-lg font-medium hover:bg-primary hover:text-on-primary transition-all flex items-center gap-2" hx-get="/admin/clients/{{ client.mac_address }}/favorites" hx-target="body" hx-swap="beforeend">
+                    <span class="material-symbols-outlined text-[18px]" data-icon="star">star</span>
+                    Manage Favorites
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-span-12 py-12 text-center bg-surface-container-low rounded-2xl border border-outline-variant/30 border-dashed">
+            <span class="material-symbols-outlined text-4xl text-outline mb-3 block" data-icon="devices">devices</span>
+            <h3 class="text-title-md font-medium text-on-surface">No clients discovered yet</h3>
+            <p class="text-body-md text-on-surface-variant mt-2 max-w-md mx-auto">Connect your AVR to the network and browse the vTuner menus. It will automatically appear here.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>

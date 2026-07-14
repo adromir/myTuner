@@ -1,0 +1,68 @@
+<div id="modal-backdrop" class="fixed inset-0 bg-surface/80 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 transition-opacity duration-300" style="animation: fadeIn 0.3s forwards;">
+    
+    <div class="bg-surface-container rounded-3xl w-full max-w-2xl max-h-[85vh] shadow-2xl border border-outline-variant flex flex-col transform scale-95 transition-transform duration-300" style="animation: scaleIn 0.3s forwards;">
+        
+        <div class="px-8 py-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low rounded-t-3xl">
+            <div>
+                <h2 class="text-title-lg font-bold text-on-surface">Manage Favorites</h2>
+                <p class="text-body-md text-on-surface-variant">{{ client.name }} ({{ client.mac_address }})</p>
+            </div>
+            <button onclick="closeModal()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-highest text-on-surface-variant transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <div class="p-8 overflow-y-auto flex-1">
+            <div class="space-y-2">
+                {% for station in stations %}
+                <div class="flex items-center justify-between p-3 rounded-xl hover:bg-surface-container-high border border-transparent hover:border-outline-variant/50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-container-highest border border-outline-variant/30 flex-shrink-0">
+                            {% if station.image_url %}
+                                <img src="{{ station.image_url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-on-surface-variant">radio</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="text-body-lg font-medium text-on-surface">{{ station.name }}</p>
+                            <p class="text-body-sm text-on-surface-variant">{{ station.provider }}</p>
+                        </div>
+                    </div>
+                    
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" 
+                               {% if station.id in favorites %}checked{% endif %}
+                               hx-post="/admin/clients/{{ client.mac_address }}/favorites/toggle"
+                               hx-vals='js:{node_id: {{ station.id }}, action: event.target.checked ? "add" : "remove"}'
+                               hx-swap="none">
+                        <div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                {% else %}
+                <p class="text-center text-on-surface-variant py-8">No stations available to favorite.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+@keyframes scaleIn {
+    to { transform: scale(1); }
+}
+</style>
+
+<script>
+function closeModal() {
+    const backdrop = document.getElementById('modal-backdrop');
+    backdrop.style.animation = 'fadeOut 0.2s forwards';
+    backdrop.querySelector('div').style.animation = 'scaleOut 0.2s forwards';
+    setTimeout(() => backdrop.remove(), 200);
+}
+</script>

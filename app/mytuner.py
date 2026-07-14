@@ -50,15 +50,58 @@ def check_mac_access(mac: str, allowed_macs: str) -> bool:
         return True
     return mac.lower() in macs
 
+def update_device_profile(db: Session, mac: str, ip: str, brand: str, search_support: bool = False, cover_art_support: bool = False):
+    if not mac:
+        return
+        
+    client = db.query(models.Client).filter(models.Client.mac_address == mac).first()
+    if not client:
+        client = models.Client(
+            name=f"Receiver ({mac[-5:]})",
+            mac_address=mac,
+            brand=brand,
+            last_ip=ip
+        )
+        db.add(client)
+    else:
+        client.last_ip = ip
+        if brand and not client.brand:
+            client.brand = brand
+            
+    if search_support:
+        client.supports_search = True
+    if cover_art_support:
+        client.supports_cover_art = True
+        
+    db.commit()
+
 @router.get("/setupapp/{brand}/asp/browseXML/loginXML.asp")
 async def mytuner_login(request: Request, brand: str, mac: str = Query(""), db: Session = Depends(get_db)):
     stream_host = get_host_url(request, db)
     nav_host = str(request.base_url).rstrip('/')
     
+    # Update device profile
+    if mac:
+        update_device_profile(db, mac, request.client.host, brand)
+    
     # Get root nodes
     nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     
     items = []
+    
+    # Inject Virtual Folders if MAC is present
+    if mac:
+        items.append({
+            "type": "Dir",
+            "id": -1,
+            "title": "Favoriten"
+        })
+        items.append({
+            "type": "Dir",
+            "id": -2,
+            "title": "Zuletzt gespielt"
+        })
+    
     for node in nodes:
         if not check_mac_access(mac, node.allowed_macs):
             continue
@@ -94,12 +137,65 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
     stream_host = get_host_url(request, db)
     nav_host = str(request.base_url).rstrip('/')
     
-    # We may need to get children from DB or dynamically from a provider
+    if mac:
+        update_device_profile(db, mac, request.client.host, brand)
+        
+    items = []
+    
+    if node_id == -1:
+        # Favorites
+        favorites = db.query(models.Favorite).filter(models.Favorite.mac_address == mac).all()
+        for fav in favorites:
+            node = fav.node
+            if node and check_mac_access(mac, node.allowed_macs):
+                item_data = {
+                    "type": "Station" if node.provider != "folder" else "Dir",
+                    "id": node.id,
+                    "title": node.name,
+                    "logo": node.image_url
+                }
+                if node.provider == "web_stream" and not node.use_transcoding:
+                    try:
+                        import json
+                        cfg = json.loads(node.provider_config) if node.provider_config else {}
+                        if "url" in cfg:
+                            item_data["stream_url_override"] = cfg["url"]
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                items.append(item_data)
+                
+        xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
+        return Response(content=xml_content, media_type="application/xml")
+        
+    if node_id == -2:
+        # History
+        history = db.query(models.History).filter(models.History.mac_address == mac).order_by(models.History.played_at.desc()).limit(50).all()
+        for hist in history:
+            node = hist.node
+            if node and check_mac_access(mac, node.allowed_macs):
+                item_data = {
+                    "type": "Station" if node.provider != "folder" else "Dir",
+                    "id": node.id,
+                    "title": node.name,
+                    "logo": node.image_url
+                }
+                if node.provider == "web_stream" and not node.use_transcoding:
+                    try:
+                        import json
+                        cfg = json.loads(node.provider_config) if node.provider_config else {}
+                        if "url" in cfg:
+                            item_data["stream_url_override"] = cfg["url"]
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                items.append(item_data)
+                
+        xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
+        return Response(content=xml_content, media_type="application/xml")
+    
+    # Normal fetching
     node = db.query(models.Node).filter(models.Node.id == node_id).first()
     if not node:
         return Response(content='<?xml version="1.0" encoding="UTF-8"?><ListOfItems><ItemCount>0</ItemCount></ListOfItems>', media_type="application/xml")
-        
-    items = []
     
     # Normal DB folder
     if node.provider == "folder":
@@ -169,4 +265,55 @@ async def mytuner_stat(request: Request):
 @router.get("/setupapp/{brand}/asp/browseXML/mac_check.asp")
 @router.get("/setupapp/{brand}/asp/browseXML/maccheck.asp")
 async def mytuner_mac_check(request: Request):
+    return Response(content='<?xml version="1.0" encoding="UTF-8"?><ListOfItems><ItemCount>0</ItemCount></ListOfItems>', media_type="application/xml")
+
+import logging
+logger = logging.getLogger("mytuner")
+
+@router.get("/setupapp/{brand}/asp/browseXML/{path:path}")
+async def mytuner_catch_all(request: Request, brand: str, path: str, mac: str = Query(""), db: Session = Depends(get_db)):
+    """
+    Catch-all endpoint for unhandled vTuner requests.
+    Automatically detects search queries and profiles the device.
+    """
+    # Look for search queries
+    query_params = request.query_params
+    search_query = query_params.get("sInput") or query_params.get("search") or query_params.get("keyword")
+    
+    if mac:
+        update_device_profile(db, mac, request.client.host, brand, search_support=bool(search_query))
+        
+    stream_host = get_host_url(request, db)
+    nav_host = str(request.base_url).rstrip('/')
+    
+    if search_query:
+        logger.info(f"AVR Search detected from {mac} for '{search_query}' on path {path}")
+        # Process Search
+        nodes = db.query(models.Node).filter(models.Node.name.ilike(f"%{search_query}%")).limit(50).all()
+        items = []
+        for node in nodes:
+            if check_mac_access(mac, node.allowed_macs):
+                item_data = {
+                    "type": "Station" if node.provider != "folder" else "Dir",
+                    "id": node.id,
+                    "title": node.name,
+                    "logo": node.image_url
+                }
+                if node.provider == "web_stream" and not node.use_transcoding:
+                    try:
+                        import json
+                        cfg = json.loads(node.provider_config) if node.provider_config else {}
+                        if "url" in cfg:
+                            item_data["stream_url_override"] = cfg["url"]
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                items.append(item_data)
+        
+        xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
+        return Response(content=xml_content, media_type="application/xml")
+        
+    # Log unknown endpoint
+    logger.warning(f"Unhandled vTuner endpoint hit: {path} by MAC: {mac} (Params: {query_params})")
+    
+    # Return empty list to prevent crash
     return Response(content='<?xml version="1.0" encoding="UTF-8"?><ListOfItems><ItemCount>0</ItemCount></ListOfItems>', media_type="application/xml")

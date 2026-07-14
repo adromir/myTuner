@@ -108,9 +108,55 @@ async def get_node_content(request: Request, node_id: int, db: Session = Depends
         "sources": db.query(models.Source).all()
     })
 
+@router.get("/logs", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def get_logs(request: Request):
+    return templates.TemplateResponse(request=request, name="partials/logs.html", context={"request": request})
+
+from fastapi.responses import StreamingResponse
+from ..core.log_streamer import queue_handler
+
+@router.get("/logs/stream", dependencies=[Depends(verify_admin)])
+async def log_stream(request: Request):
+    return StreamingResponse(queue_handler.subscribe(), media_type="text/event-stream")
+
 @router.get("/profile", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def get_profile(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(request=request, name="partials/profile.html", context={"request": request})
+
+@router.get("/clients", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def get_clients(request: Request, db: Session = Depends(get_db)):
+    clients = db.query(models.Client).order_by(models.Client.last_seen.desc()).all()
+    return templates.TemplateResponse(request=request, name="partials/clients.html", context={
+        "request": request,
+        "clients": clients
+    })
+
+@router.get("/clients/{mac}/favorites", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def get_client_favorites(request: Request, mac: str, db: Session = Depends(get_db)):
+    client = db.query(models.Client).filter(models.Client.mac_address == mac).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+        
+    favorites = [fav.node_id for fav in db.query(models.Favorite).filter(models.Favorite.mac_address == mac).all()]
+    all_stations = db.query(models.Node).filter(models.Node.provider != 'folder').all()
+    
+    return templates.TemplateResponse(request=request, name="partials/modal_favorites.html", context={
+        "request": request,
+        "client": client,
+        "favorites": favorites,
+        "stations": all_stations
+    })
+
+@router.post("/clients/{mac}/favorites/toggle", response_class=Response, dependencies=[Depends(verify_admin)])
+async def toggle_client_favorite(mac: str, node_id: int = Form(...), action: str = Form(...), db: Session = Depends(get_db)):
+    if action == "add":
+        if not db.query(models.Favorite).filter(models.Favorite.mac_address == mac, models.Favorite.node_id == node_id).first():
+            fav = models.Favorite(mac_address=mac, node_id=node_id)
+            db.add(fav)
+    else:
+        db.query(models.Favorite).filter(models.Favorite.mac_address == mac, models.Favorite.node_id == node_id).delete()
+    db.commit()
+    return Response(status_code=200)
 
 @router.get("/settings", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def get_settings(request: Request, db: Session = Depends(get_db)):

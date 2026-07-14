@@ -20,6 +20,10 @@
 <span class="material-symbols-outlined" data-icon="hub">hub</span>
 <span>Sources</span>
 </a>
+<a @click="activeTab ='clients'" :class="activeTab ==='clients' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/clients" hx-target="#main-content" hx-swap="innerHTML">
+<span class="material-symbols-outlined" data-icon="devices">devices</span>
+<span>Clients</span>
+</a>
 <a @click="activeTab ='profile'" :class="activeTab ==='profile' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/profile" hx-target="#main-content" hx-swap="innerHTML">
 <span class="material-symbols-outlined" data-icon="person">person</span>
 <span>Profile</span>
