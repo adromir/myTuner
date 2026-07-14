@@ -23,9 +23,9 @@ The recommended and fully supported way to install and run μTuner is via **Dock
    Open a web browser and navigate to `http://<your-server-ip>/`. You should be greeted by the μTuner admin login screen. The default password is `admin`.
 
 ## Deploying via Pre-built Image (ghcr.io)
-*Note: This assumes the GitHub Action for pushing to the container registry is active.*
+μTuner automatically builds and publishes Docker images for both **AMD64 (Standard PCs/Servers)** and **ARM64 (Raspberry Pi, Apple Silicon, etc.)**. Docker will automatically pull the correct architecture for your system!
 
-You can run μTuner without cloning the repository by using a `docker-compose.yml` file:
+You can run μTuner without cloning the repository by using this `docker-compose.yml` file:
 
 ```yaml
 services:

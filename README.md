@@ -37,14 +37,28 @@ Instead of being limited to their curated lists, you gain absolute control over 
 
 ### 1. Installation
 
-The easiest way to get μTuner running is via Docker Compose.
+The easiest way to get μTuner running is via Docker Compose. We provide pre-built, **Multi-Architecture** images (AMD64 and ARM64) on GitHub Container Registry, so it runs perfectly on standard servers and Raspberry Pis without needing to compile anything!
 
-Clone the repository and spin up the container:
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  mytuner:
+    image: ghcr.io/adromir/mytuner:latest
+    container_name: mytuner
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Europe/Berlin
+```
+
+Then start the container:
 
 ```bash
-git clone https://github.com/adromir/myTuner.git
-cd myTuner
-docker-compose up -d --build
+docker compose up -d
 ```
 
 ### 2. Network Configuration (DNS Hijacking)
