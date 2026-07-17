@@ -335,25 +335,28 @@ async def browse_smb_modal(
     directories = []
     error = None
     
-    smb_host = smb_host or ""
+    smb_host = (smb_host or "").strip()
     smb_path = (smb_path or "").strip('/')
     auth_part = f"{smb_user}:{smb_pass}@" if smb_user or smb_pass else ""
     base_url = f"smb://{smb_host}/{smb_path}"
     
-    try:
-        unc_path = r"\\" + f"{smb_host}\\{smb_path}"
-        unc_path = unc_path.rstrip('\\')
-        
-        if smb_user:
-            smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
-        else:
-            smbclient.register_session(smb_host, username="guest", password="")
+    if not smb_host:
+        error = "Please enter a Host / IP address first."
+    else:
+        try:
+            unc_path = r"\\" + f"{smb_host}\\{smb_path}"
+            unc_path = unc_path.rstrip('\\')
             
-        for entry in smbclient.scandir(unc_path):
-            if entry.is_dir():
-                directories.append(entry.name)
-    except Exception as e:
-        error = f"Failed to connect: {str(e)}"
+            if smb_user:
+                smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
+            else:
+                smbclient.register_session(smb_host, username="guest", password="")
+                
+            for entry in smbclient.scandir(unc_path):
+                if entry.is_dir():
+                    directories.append(entry.name)
+        except Exception as e:
+            error = f"Failed to connect: {str(e)}"
         
     return templates.TemplateResponse(request=request, name="partials/modal_smb_browse.html", context={
         "request": request,
@@ -999,6 +1002,43 @@ async def edit_node_submit(
     
     db.commit()
     return RedirectResponse(url="/admin/", status_code=303)
+
+@router.post("/nodes/bulk", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def bulk_action_nodes(request: Request, selected_nodes: list[int] = Form([]), bulk_action: str = Form(...), db: Session = Depends(get_db)):
+    if selected_nodes:
+        nodes = db.query(models.Node).filter(models.Node.id.in_(selected_nodes)).all()
+        for node in nodes:
+            if bulk_action == "transcode_on":
+                node.use_transcoding = True
+            elif bulk_action == "transcode_off":
+                node.use_transcoding = False
+        
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+            
+    return render_explorer_tree(request, db)
+
+@router.post("/nodes/{node_id}/move", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def move_node(request: Request, node_id: int, target_id: int = Form(...), position: str = Form("inside"), db: Session = Depends(get_db)):
+    node = db.query(models.Node).filter(models.Node.id == node_id).first()
+    target = db.query(models.Node).filter(models.Node.id == target_id).first()
+    
+    if node and target and node.id != target.id:
+        if position == "inside":
+            node.move_inside(target.id)
+        elif position == "after":
+            node.move_after(target.id)
+        elif position == "before":
+            node.move_before(target.id)
+            
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+            
+    return render_explorer_tree(request, db)
 
 @router.delete("/nodes/{node_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def delete_node(request: Request, node_id: int, db: Session = Depends(get_db)):

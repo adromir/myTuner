@@ -143,16 +143,16 @@
  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style id="theme-variables">
         :root {
-            --color-background: #fcf8ff;
-            --color-surface: #fcf8ff;
-            --color-surface-bright: #fcf8ff;
+            --color-background: #f1f3f5;
+            --color-surface: #ffffff;
+            --color-surface-bright: #ffffff;
             --color-surface-container-lowest: #ffffff;
-            --color-surface-container-low: #f5f2fe;
-            --color-surface-container: #efecf8;
-            --color-surface-container-high: #e9e6f3;
-            --color-surface-container-highest: #e4e1ed;
-            --color-surface-dim: #dbd8e4;
-            --color-surface-variant: #e4e1ed;
+            --color-surface-container-low: #f8f9fa;
+            --color-surface-container: #e9ecef;
+            --color-surface-container-high: #dee2e6;
+            --color-surface-container-highest: #ced4da;
+            --color-surface-dim: #dee2e6;
+            --color-surface-variant: #e9ecef;
             --color-inverse-surface: #303038;
             --color-inverse-on-surface: #f2effb;
             --color-on-background: #1b1b23;
@@ -279,5 +279,53 @@
  }
  });
  </script>
+<!-- Global Context Menu -->
+<div x-data="{
+    open: false,
+    x: 0,
+    y: 0,
+    nodeId: null,
+    showMenu(e, id) {
+        this.open = true;
+        this.x = e.clientX;
+        this.y = e.clientY;
+        this.nodeId = id;
+    }
+}"
+@contextmenu.window="if ($event.target.closest('.tree-node-row')) { $event.preventDefault(); showMenu($event, $event.target.closest('.tree-node-row').dataset.id); } else { open = false; }"
+@click.window="open = false"
+x-show="open"
+class="fixed z-[100] bg-surface rounded-xl shadow-lg border border-outline-variant/30 py-2 min-w-[150px]"
+:style="`top: ${y}px; left: ${x}px;`"
+x-transition.opacity.duration.100ms
+style="display: none;">
+    
+    <button @click="window.playTestStream(nodeId)" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">play_arrow</span> Test Play
+    </button>
+    
+    <button @click="htmx.ajax('GET', '/admin/modal/edit/' + nodeId, {target: 'body', swap: 'beforeend'})" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">edit</span> Edit Node
+    </button>
+    
+    <button @click="htmx.ajax('DELETE', '/admin/nodes/' + nodeId, {target: '#explorer-tree', select: '#explorer-tree', swap: 'outerHTML'})" class="w-full text-left px-4 py-2 text-sm text-error hover:bg-error-container hover:text-on-error-container flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">delete</span> Delete Node
+    </button>
+
+</div>
+
+<audio id="test-player" class="hidden"></audio>
+<script>
+    window.playTestStream = function(nodeId) {
+        const player = document.getElementById('test-player');
+        // Stop current if playing
+        player.pause();
+        player.src = `/stream/${nodeId}`;
+        player.play().catch(e => {
+            console.error("Test Play failed:", e);
+            alert("Browser cannot play this stream natively.");
+        });
+    };
+</script>
 </body>
 </html>

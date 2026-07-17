@@ -1,23 +1,35 @@
 <!-- Left Column: Tree View Navigation -->
-<section id="explorer-tree" class="col-span-12 lg:col-span-3 bg-surface-container-lowest border border-outline/50 rounded-2xl p-5 flex flex-col h-[calc(100vh-120px)] sticky top-[88px] overflow-y-auto overflow-x-hidden">
- <div class="flex items-center justify-between mb-6">
+<section id="explorer-tree" class="col-span-12 lg:col-span-3 bg-surface-container-lowest border border-outline/50 rounded-2xl p-5 flex flex-col h-[calc(100vh-120px)] sticky top-[88px] overflow-hidden" x-data="{
+    get hasSelection() { return Array.from($root.querySelectorAll('input[name=selected_nodes]:checked')).length > 0; }
+}">
+ <form hx-post="/admin/nodes/bulk" hx-target="#explorer-tree" hx-swap="outerHTML" class="flex flex-col h-full w-full">
+ <div class="flex items-center justify-between mb-6 shrink-0">
  <h3 class="font-headline-md text-headline-md text-on-surface">Explorer</h3>
  <div class="flex gap-2">
- {% for p in get_all_providers() %}
- {% if p.allow_as_node %}
- <button hx-get="/admin/modal/add?provider={{ p.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1 bg-surface-container-high rounded-lg border border-outline-variant/30" title="Add {{ p.name }}">
- <span class="material-symbols-outlined text-sm" data-icon="{{ p.icon }}">{{ p.icon }}</span>
- </button>
- {% endif %}
- {% endfor %}
+    <!-- Removed Add Buttons per user request -->
  </div>
  </div>
- <div class="space-y-4">
+
+ <!-- Bulk Action Bar -->
+ <div x-show="hasSelection" x-transition.opacity x-cloak class="bg-primary-container text-on-primary-container p-2 rounded-lg flex items-center justify-between mb-4 shrink-0 shadow-sm border border-primary/20">
+    <span class="text-sm font-bold ml-2">Bulk Actions:</span>
+    <div class="flex gap-2">
+        <button type="submit" name="bulk_action" value="transcode_on" class="px-2 py-1 bg-surface rounded hover:bg-surface-variant text-xs text-on-surface transition-colors" title="Enable Transcoding for selected">
+            <span class="material-symbols-outlined text-xs align-middle">settings</span> ON
+        </button>
+        <button type="submit" name="bulk_action" value="transcode_off" class="px-2 py-1 bg-surface rounded hover:bg-surface-variant text-xs text-on-surface transition-colors" title="Disable Transcoding for selected">
+            <span class="material-symbols-outlined text-xs align-middle">settings</span> OFF
+        </button>
+    </div>
+ </div>
+
+ <div class="space-y-4 flex-1 overflow-y-auto pr-2" @change="hasSelection = Array.from($root.querySelectorAll('input[name=selected_nodes]:checked')).length > 0">
  {% from'partials/tree_item.html' import render_node %}
  {% for node in all_nodes if node.parent_id is none %}
  {{ render_node(node, selected_node.id if selected_node else None) }}
  {% endfor %}
  </div>
+ </form>
 </section>
 
 <!-- Right Column: Source Browser -->

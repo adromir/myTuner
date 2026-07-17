@@ -1,4 +1,4 @@
-<div id="modal-backdrop-smb" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })">
+<div id="modal-backdrop-smb" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })" @click.stop>
  <div class="bg-surface rounded-xl shadow-lg w-[500px] p-6 max-h-[90vh] overflow-hidden flex flex-col" @click.away="open = false">
  <h2 class="text-headline-md mb-4 text-on-surface">Browse SMB Share</h2>
  <form id="smb-modal-browse-form">

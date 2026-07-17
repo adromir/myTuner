@@ -6,10 +6,14 @@
  @dragleave.prevent.stop="if (!$event.currentTarget.contains($event.relatedTarget)) drag = false"
  @drop.stop.prevent="drag = false; handleDrop($event, {{ node.id }})"
  {% endif %}>
- <div @click="if (!$event.target.closest('button')) expanded = !expanded"
- class="drop-zone flex items-center justify-between group cursor-pointer py-2 hover:bg-surface-container-high rounded px-2 -ml-2 transition-all border-2 {% if node.id == selected_node_id %}bg-surface-container-high font-bold{% endif %}"
+ <div @click="if (!$event.target.closest('button') && !$event.target.closest('input')) expanded = !expanded"
+ data-id="{{ node.id }}"
+ draggable="true"
+ ondragstart="event.dataTransfer.setData('application/json', JSON.stringify({type: 'node', id: {{ node.id }}}))"
+ class="tree-node-row drop-zone flex items-center justify-between group cursor-pointer py-2 hover:bg-surface-container-high rounded px-2 -ml-2 transition-all border-2 {% if node.id == selected_node_id %}bg-surface-container-high font-bold{% endif %}"
  :class="drag ?'border-primary bg-primary-container/20' :'border-transparent'">
- <div class="flex items-center gap-2 pointer-events-none">
+ <div class="flex items-center gap-2 pointer-events-none flex-1 overflow-hidden">
+ <input type="checkbox" name="selected_nodes" value="{{ node.id }}" class="pointer-events-auto rounded border-outline-variant text-primary focus:ring-primary/20 shrink-0" @click.stop>
  {% if node.children %}
  <span class="material-symbols-outlined text-on-surface-variant text-lg transition-transform duration-200" :class="expanded ?'rotate-90' :''" data-icon="chevron_right">chevron_right</span>
  {% else %}
@@ -26,17 +30,19 @@
  <span class="material-symbols-outlined text-on-surface-variant" data-icon="dns">dns</span>
  {% endif %}
  {% endif %}
- <span class="font-medium text-on-surface text-body-md group-hover:text-primary transition-colors">{{ node.name }}</span>
+ <span class="font-medium text-on-surface text-body-md group-hover:text-primary transition-colors flex-1 truncate">{{ node.name }}</span>
+ {% if node.use_transcoding %}
+ <span class="material-symbols-outlined text-on-surface-variant text-[14px]" title="FFmpeg Transcoding Enabled">settings</span>
+ {% endif %}
+ {% if node.allowed_macs %}
+ <span class="material-symbols-outlined text-error text-[14px]" title="MAC Filtering Enabled">lock</span>
+ {% endif %}
  </div>
  
  <div class="opacity-0 group-hover:opacity-100 flex items-center">
- {% for p in get_all_providers() %}
- {% if p.allow_as_node %}
- <button hx-get="/admin/modal/add?provider={{ p.id }}&parent_id={{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Add {{ p.name }}">
- <span class="material-symbols-outlined text-sm" data-icon="{{ p.icon }}">{{ p.icon }}</span>
+ <button @click.stop="window.playTestStream('{{ node.id }}')" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Test Play">
+ <span class="material-symbols-outlined text-sm" data-icon="play_arrow">play_arrow</span>
  </button>
- {% endif %}
- {% endfor %}
  <button hx-get="/admin/modal/edit/{{ node.id }}" hx-target="body" hx-swap="beforeend" class="text-on-surface-variant hover:text-primary transition-colors p-1" title="Edit">
  <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
  </button>

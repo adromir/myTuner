@@ -85,16 +85,33 @@
 
 <script>
 function handleDrop(event, parentId) {
- event.preventDefault();
- const dataStr = event.dataTransfer.getData("application/json");
- if (!dataStr) return;
- 
- try {
- const item = JSON.parse(dataStr);
- // Call backend to process the drop
- const formData = new FormData();
- formData.append('parent_id', parentId);
- formData.append('type', item.type);
+    event.preventDefault();
+    const dataStr = event.dataTransfer.getData("application/json");
+    if (!dataStr) return;
+    
+    try {
+        const item = JSON.parse(dataStr);
+        
+        if (item.type === 'node') {
+            if (item.id === parentId) return; // Can't drop on itself
+            
+            const formData = new FormData();
+            formData.append('target_id', parentId);
+            formData.append('position', 'inside'); // Default to inside for now
+            
+            fetch(`/admin/nodes/${item.id}/move`, {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                htmx.ajax('GET', '/admin/', {target: '#explorer-tree', select: '#explorer-tree', swap: 'outerHTML'});
+            });
+            return;
+        }
+
+        // Call backend to process the drop for new items
+        const formData = new FormData();
+        formData.append('parent_id', parentId);
+        formData.append('type', item.type);
  formData.append('title', item.title);
  formData.append('stream_url', item.stream_url ||'');
  formData.append('image_url', item.image_url ||'');

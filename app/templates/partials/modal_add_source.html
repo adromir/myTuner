@@ -16,49 +16,34 @@
  <input type="text" name="name" required class="w-full px-3 py-2 border rounded-lg" placeholder="e.g., My Favorites">
  </div>
 
- {% if provider in ['podcast','m3u'] %}
+ {% set provider_inst = get_provider(provider) %}
+ {% if provider_inst %}
+ {% for field in provider_inst.config_schema %}
  <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">URL</label>
- <input type="text" name="config_url" required class="w-full px-3 py-2 border rounded-lg" placeholder="https://...">
- </div>
- {% endif %}
-
- {% if provider =='local_dir' %}
- <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Path</label>
+ <label class="block text-body-sm font-bold mb-2 text-on-surface">{{ field.label }}</label>
+ {% if field.type == "local_path" %}
  <div class="flex gap-2">
- <input type="text" name="config_path" id="config_path_input_source" required class="w-full px-3 py-2 border rounded-lg" placeholder="/media/audio">
- <button type="button" hx-get="/admin/fs/browse?target_id=config_path_input_source" hx-target="body" hx-swap="beforeend" class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
+ <input type="text" name="config_{{ field.name }}" id="config_{{ field.name }}_input_source" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ <button type="button" hx-get="/admin/fs/browse?target_id=config_{{ field.name }}_input_source" hx-target="body" hx-swap="beforeend" class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
  <span class="material-symbols-outlined text-sm">folder_open</span> Browse
  </button>
  </div>
- </div>
- {% endif %}
-
- {% if provider =='smb' %}
- <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Host / IP</label>
- <input type="text" name="smb_host" required class="w-full px-3 py-2 border rounded-lg" placeholder="192.168.1.100">
- </div>
- <div class="mb-4">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Share / Path</label>
+ {% elif field.type == "smb_path" %}
  <div class="flex gap-2">
- <input type="text" name="smb_path" id="smb_path_input_source" required class="w-full px-3 py-2 border rounded-lg" placeholder="music">
- <button type="button" hx-validate="false" hx-post="/admin/smb/browse_modal" hx-target="body" hx-swap="beforeend" hx-include="closest form" hx-vals='{"target_id": "smb_path_input_source"}' class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
+ <input type="text" name="config_{{ field.name }}" id="config_{{ field.name }}_input_source" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ <button type="button" hx-validate="false" hx-post="/admin/smb/browse_modal" hx-target="body" hx-swap="beforeend" hx-include="closest form" hx-vals='{"target_id": "config_{{ field.name }}_input_source"}' class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
  <span class="material-symbols-outlined text-sm">folder_open</span> Browse
  </button>
  </div>
+ {% elif field.type == "password" %}
+ <input type="password" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ {% elif field.type == "textarea" %}
+ <textarea name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface h-32" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}></textarea>
+ {% else %}
+ <input type="text" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ {% endif %}
  </div>
- <div class="flex gap-4 mb-4">
- <div class="flex-1">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Username</label>
- <input type="text" name="smb_user" class="w-full px-3 py-2 border rounded-lg" placeholder="Optional">
- </div>
- <div class="flex-1">
- <label class="block text-body-sm font-bold mb-2 text-on-surface">Password</label>
- <input type="password" name="smb_pass" class="w-full px-3 py-2 border rounded-lg" placeholder="Optional">
- </div>
- </div>
+ {% endfor %}
  {% endif %}
 
  <div class="flex justify-end gap-2 mt-6">

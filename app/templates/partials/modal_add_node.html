@@ -35,8 +35,17 @@ x-data="{
  <span class="material-symbols-outlined text-sm">folder_open</span> Browse
  </button>
  </div>
+ {% elif field.type == "smb_path" %}
+ <div class="flex gap-2">
+ <input type="text" name="config_{{ field.name }}" id="config_{{ field.name }}_input_node_{{ parent_id|default('0') }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ <button type="button" hx-validate="false" hx-post="/admin/smb/browse_modal" hx-target="body" hx-swap="beforeend" hx-include="closest form" hx-vals='{"target_id": "config_{{ field.name }}_input_node_{{ parent_id|default('0') }}"}' class="px-4 py-2 bg-surface-container-high hover:bg-surface-variant text-on-surface rounded-lg transition-colors border border-outline-variant/30 flex items-center gap-2 shrink-0">
+ <span class="material-symbols-outlined text-sm">folder_open</span> Browse
+ </button>
+ </div>
  {% elif field.type == "password" %}
  <input type="password" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
+ {% elif field.type == "textarea" %}
+ <textarea name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface h-32" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}></textarea>
  {% else %}
  <input type="text" name="config_{{ field.name }}" class="w-full px-3 py-2 border rounded-lg bg-surface text-on-surface" placeholder="{{ field.placeholder }}" {% if field.required %}required{% endif %}>
  {% endif %}

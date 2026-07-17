@@ -1,4 +1,4 @@
-<div id="modal-backdrop-fs" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })">
+<div id="modal-backdrop-fs" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })" @click.stop>
  <div class="bg-surface rounded-xl shadow-lg w-[500px] h-[600px] flex flex-col" @click.away="open = false">
  
  <div class="p-4 border-b border-outline-variant/30 shrink-0">
