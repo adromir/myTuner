@@ -130,7 +130,7 @@ from ..core.log_streamer import queue_handler
 
 @router.get("/logs/stream", dependencies=[Depends(verify_admin)])
 async def log_stream(request: Request):
-    return StreamingResponse(queue_handler.subscribe(), media_type="text/event-stream")
+    return StreamingResponse(queue_handler.subscribe(request), media_type="text/event-stream")
 
 @router.get("/profile", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def get_profile(request: Request, db: Session = Depends(get_db)):

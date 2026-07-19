@@ -149,7 +149,8 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
     
     if node_id == -1:
         # Favorites
-        favorites = db.query(models.Favorite).filter(models.Favorite.mac_address == mac).all()
+        from sqlalchemy.orm import joinedload
+        favorites = db.query(models.Favorite).options(joinedload(models.Favorite.node)).filter(models.Favorite.mac_address == mac).all()
         for fav in favorites:
             node = fav.node
             if node and check_mac_access(mac, node.allowed_macs):
@@ -160,7 +161,8 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
         
     if node_id == -2:
         # History
-        history = db.query(models.History).filter(models.History.mac_address == mac).order_by(models.History.played_at.desc()).limit(50).all()
+        from sqlalchemy.orm import joinedload
+        history = db.query(models.History).options(joinedload(models.History.node)).filter(models.History.mac_address == mac).order_by(models.History.played_at.desc()).limit(50).all()
         for hist in history:
             node = hist.node
             if node and check_mac_access(mac, node.allowed_macs):

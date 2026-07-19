@@ -26,16 +26,22 @@ class QueueHandler(logging.Handler):
         except Exception:
             self.handleError(record)
             
-    async def subscribe(self) -> AsyncGenerator[str, None]:
+    async def subscribe(self, request) -> AsyncGenerator[str, None]:
         q = asyncio.Queue(maxsize=100)
         self.queues.append(q)
         try:
             while True:
-                msg = await q.get()
-                # Yield in SSE format
-                yield f"data: {msg}\n\n"
+                if await request.is_disconnected():
+                    break
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=2.0)
+                    yield f"data: {msg}\n\n"
+                except asyncio.TimeoutError:
+                    # Keep-alive or just loop to check disconnect
+                    pass
         finally:
-            self.queues.remove(q)
+            if q in self.queues:
+                self.queues.remove(q)
 
 queue_handler = QueueHandler()
 formatter = logging.Formatter('%(message)s')
