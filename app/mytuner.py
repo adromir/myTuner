@@ -7,6 +7,25 @@ from typing import List
 router = APIRouter()
 
 import html
+import json
+
+
+def _build_node_item(node) -> dict:
+    """Build a vTuner item dict from a Node, applying stream_url_override for web_streams."""
+    item_data = {
+        "type": "Station" if node.provider != "folder" else "Dir",
+        "id": node.id,
+        "title": node.name,
+        "logo": node.image_url
+    }
+    if node.provider == "web_stream" and not node.use_transcoding:
+        try:
+            cfg = json.loads(node.provider_config) if node.provider_config else {}
+            if "url" in cfg:
+                item_data["stream_url_override"] = cfg["url"]
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return item_data
 
 def get_host_url(request: Request, db: Session) -> str:
     setting = db.query(models.Settings).filter(models.Settings.key == "host_url").first()
@@ -113,21 +132,7 @@ async def mytuner_login(request: Request, brand: str, mac: str = Query(""), db: 
                 "title": node.name
             })
         else:
-            item_data = {
-                "type": "Station",
-                "id": node.id,
-                "title": node.name,
-                "logo": node.image_url
-            }
-            if node.provider == "web_stream" and not node.use_transcoding:
-                try:
-                    import json
-                    cfg = json.loads(node.provider_config) if node.provider_config else {}
-                    if "url" in cfg:
-                        item_data["stream_url_override"] = cfg["url"]
-                except (json.JSONDecodeError, TypeError):
-                    pass
-            items.append(item_data)
+            items.append(_build_node_item(node))
             
     xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
     return Response(content=xml_content, media_type="application/xml")
@@ -148,21 +153,7 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
         for fav in favorites:
             node = fav.node
             if node and check_mac_access(mac, node.allowed_macs):
-                item_data = {
-                    "type": "Station" if node.provider != "folder" else "Dir",
-                    "id": node.id,
-                    "title": node.name,
-                    "logo": node.image_url
-                }
-                if node.provider == "web_stream" and not node.use_transcoding:
-                    try:
-                        import json
-                        cfg = json.loads(node.provider_config) if node.provider_config else {}
-                        if "url" in cfg:
-                            item_data["stream_url_override"] = cfg["url"]
-                    except (json.JSONDecodeError, TypeError):
-                        pass
-                items.append(item_data)
+                items.append(_build_node_item(node))
                 
         xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
         return Response(content=xml_content, media_type="application/xml")
@@ -173,21 +164,7 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
         for hist in history:
             node = hist.node
             if node and check_mac_access(mac, node.allowed_macs):
-                item_data = {
-                    "type": "Station" if node.provider != "folder" else "Dir",
-                    "id": node.id,
-                    "title": node.name,
-                    "logo": node.image_url
-                }
-                if node.provider == "web_stream" and not node.use_transcoding:
-                    try:
-                        import json
-                        cfg = json.loads(node.provider_config) if node.provider_config else {}
-                        if "url" in cfg:
-                            item_data["stream_url_override"] = cfg["url"]
-                    except (json.JSONDecodeError, TypeError):
-                        pass
-                items.append(item_data)
+                items.append(_build_node_item(node))
                 
         xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
         return Response(content=xml_content, media_type="application/xml")
@@ -211,21 +188,7 @@ async def mytuner_nav(request: Request, brand: str, node_id: int = Query(...), m
                     "title": child.name
                 })
             else:
-                item_data = {
-                    "type": "Station",
-                    "id": child.id,
-                    "title": child.name,
-                    "logo": child.image_url
-                }
-                if child.provider == "web_stream" and not child.use_transcoding:
-                    try:
-                        import json
-                        cfg = json.loads(child.provider_config) if child.provider_config else {}
-                        if "url" in cfg:
-                            item_data["stream_url_override"] = cfg["url"]
-                    except (json.JSONDecodeError, TypeError):
-                        pass
-                items.append(item_data)
+                items.append(_build_node_item(child))
     else:
         # Dynamic provider
         from .providers import get_provider
@@ -288,26 +251,14 @@ async def mytuner_catch_all(request: Request, brand: str, path: str, mac: str = 
     
     if search_query:
         logger.info(f"AVR Search detected from {mac} for '{search_query}' on path {path}")
-        # Process Search
-        nodes = db.query(models.Node).filter(models.Node.name.ilike(f"%{search_query}%")).limit(50).all()
+        # Process Search. Limit input to prevent wildcards taking over
+        # We also replace % and _ which are SQL LIKE wildcards
+        safe_query = search_query.replace("%", "").replace("_", "")
+        nodes = db.query(models.Node).filter(models.Node.name.ilike(f"%{safe_query}%")).limit(50).all()
         items = []
         for node in nodes:
             if check_mac_access(mac, node.allowed_macs):
-                item_data = {
-                    "type": "Station" if node.provider != "folder" else "Dir",
-                    "id": node.id,
-                    "title": node.name,
-                    "logo": node.image_url
-                }
-                if node.provider == "web_stream" and not node.use_transcoding:
-                    try:
-                        import json
-                        cfg = json.loads(node.provider_config) if node.provider_config else {}
-                        if "url" in cfg:
-                            item_data["stream_url_override"] = cfg["url"]
-                    except (json.JSONDecodeError, TypeError):
-                        pass
-                items.append(item_data)
+                items.append(_build_node_item(node))
         
         xml_content = generate_vtuner_xml(items, nav_host, stream_host, brand, mac)
         return Response(content=xml_content, media_type="application/xml")

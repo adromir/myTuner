@@ -29,18 +29,17 @@ class RequiresLoginException(Exception):
 def verify_admin(request: Request, db: Session = Depends(get_db)):
     """Dependency to check if the user is authenticated via cookie. Redirects HTMX requests via headers."""
     session_token = request.cookies.get(COOKIE_NAME)
-    # Simple check: the session_token is just 'authenticated' for now, or we could use JWT.
-    # Since it's a simple local admin panel, a basic token or simply trusting the cookie if it exists and matches a server-side session is better.
-    # Let's just use a static token stored in the database, or just rely on the 'authenticated' cookie value since the user is in their local network.
-    # For slightly better security, we will store a random session token in settings.
-    session_setting = db.query(models.Settings).filter(models.Settings.key == "session_token").first()
-    expiry_setting = db.query(models.Settings).filter(models.Settings.key == "session_expiry").first()
+    
+    settings = {s.key: s.value for s in db.query(models.Settings).filter(
+        models.Settings.key.in_(["session_token", "session_expiry"])
+    ).all()}
     
     is_authenticated = False
-    if session_setting and session_token:
-        if session_setting.value == session_token:
+    if settings.get("session_token") and session_token:
+        if settings["session_token"] == session_token:
             import time
-            if expiry_setting and expiry_setting.value and int(time.time()) < int(expiry_setting.value):
+            expiry = settings.get("session_expiry")
+            if expiry and int(time.time()) < int(expiry):
                 is_authenticated = True
             
     if not is_authenticated:

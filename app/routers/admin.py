@@ -25,6 +25,19 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["get_all_providers"] = get_all_providers
 templates.env.globals["get_provider"] = get_provider
 
+
+def render_explorer_tree(request: Request, db: Session):
+    """Helper to re-render the explorer tree partial after mutations."""
+    nodes = db.query(models.Node).all()
+    sources = db.query(models.Source).all()
+    return templates.TemplateResponse(request=request, name="partials/main_content.html", context={
+        "request": request,
+        "selected_node": None,
+        "list_nodes": [n for n in nodes if n.parent_id is None],
+        "all_nodes": nodes,
+        "sources": sources
+    })
+
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str = None):
     return templates.TemplateResponse(request=request, name="login.html", context={"request": request, "error": error})
@@ -320,7 +333,7 @@ async def get_smb_modal(request: Request, parent_id: int = None):
     })
 
 
-import os
+
 
 @router.post("/smb/browse_modal", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def browse_smb_modal(
@@ -493,7 +506,7 @@ async def add_smb_nodes(
     for dir_name in selected_dirs:
         path = f"{smb_path}{current_path}/{dir_name}".strip('/')
         
-        import json
+
         config = {
             "host": smb_host,
             "path": path,
@@ -511,7 +524,6 @@ async def add_smb_nodes(
         db.add(new_node)
         
     db.commit()
-    root_nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     return RedirectResponse(url="/admin/", status_code=303)
 
 @router.get("/modal/local", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
@@ -568,7 +580,7 @@ async def add_local_nodes(
     for dir_name in selected_dirs:
         path = os.path.join(current_path, dir_name)
         
-        import json
+
         new_node = models.Node(
             name=dir_name,
             provider="local_dir",
@@ -579,18 +591,9 @@ async def add_local_nodes(
         db.add(new_node)
         
     db.commit()
-    root_nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     return RedirectResponse(url="/admin/", status_code=303)
 
-@router.get("/logs", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
-async def get_logs(request: Request):
-    import os
-    logs = []
-    log_file = "data/mytuner.log"
-    if os.path.exists(log_file):
-        with open(log_file, "r", encoding="utf-8") as f:
-            logs = f.readlines()[-100:]
-    return templates.TemplateResponse(request=request, name="partials/logs.html", context={"request": request, "logs": logs})
+
 
 @router.get("/sources", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def get_sources(request: Request, db: Session = Depends(get_db)):
@@ -609,7 +612,7 @@ async def create_source(
     from ..providers import get_provider
     provider_inst = get_provider(provider)
     
-    import json
+
     config_dict = {}
     
     if provider_inst:
@@ -638,14 +641,7 @@ async def create_source(
     sources = db.query(models.Source).all()
     return templates.TemplateResponse(request=request, name="partials/sources.html", context={"request": request, "sources": sources})
 
-@router.delete("/sources/{source_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
-async def delete_source(request: Request, source_id: int, db: Session = Depends(get_db)):
-    source = db.query(models.Source).filter(models.Source.id == source_id).first()
-    if source:
-        db.delete(source)
-        db.commit()
-    sources = db.query(models.Source).all()
-    return templates.TemplateResponse(request=request, name="partials/sources.html", context={"request": request, "sources": sources})
+
 
 @router.get("/modal/add_source", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def get_modal_add_source(request: Request, provider: str):
@@ -657,7 +653,7 @@ async def get_modal_edit_source(request: Request, source_id: int, db: Session = 
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
     
-    import json
+
     config = {}
     if source.config:
         config = json.loads(source.config)
@@ -715,7 +711,7 @@ async def edit_source(
     from ..providers import get_provider
     provider_inst = get_provider(provider)
     
-    import json
+
     config_dict = {}
     
     if provider_inst:
@@ -772,18 +768,24 @@ async def browse_source_items(request: Request, source_id: int, db: Session = De
     if not source:
         raise HTTPException(status_code=404, detail="Source not found")
         
-    config = {}
-    if source.config:
-        config = json.loads(source.config)
-        
+    # Try cached items first
     items = []
-    try:
-        from ..providers import get_provider
-        provider_instance = get_provider(source.provider)
-        if provider_instance:
-            items = provider_instance.browse_folder(config, 0)
-    except Exception as e:
-        logger.error(f"Error browsing source items: {e}")
+    cache = db.query(models.SourceCache).filter(models.SourceCache.source_id == source_id).first()
+    if cache and cache.data:
+        try:
+            items = json.loads(cache.data)
+        except (json.JSONDecodeError, TypeError):
+            items = []
+    
+    # Fallback to live fetch if no cache
+    if not items:
+        config = json.loads(source.config) if source.config else {}
+        try:
+            provider_instance = get_provider(source.provider)
+            if provider_instance:
+                items = provider_instance.browse_folder(config, 0)
+        except Exception as e:
+            logger.error(f"Error browsing source items: {e}")
         
     return templates.TemplateResponse(request=request, name="partials/source_items.html", context={"request": request, "source": source, "items": items})
 
@@ -797,15 +799,15 @@ async def create_node(
     provider = form_data.get("provider")
     image_url = form_data.get("image_url", "")
     allowed_macs = form_data.get("allowed_macs", "")
-    use_transcoding = form_data.get("use_transcoding") == "true"
-    is_continuous_stream = form_data.get("is_continuous_stream") == "true"
+    use_transcoding = form_data.get("use_transcoding") is not None
+    is_continuous_stream = form_data.get("is_continuous_stream") is not None
     parent_id = form_data.get("parent_id")
     if parent_id: parent_id = int(parent_id)
 
     from ..providers import get_provider
     provider_inst = get_provider(provider)
     
-    import json
+
     provider_config = {}
     
     if provider_inst:
@@ -861,7 +863,7 @@ async def drop_node(
     source_provider: str = Form(""),
     db: Session = Depends(get_db)
 ):
-    import json
+
     if type == "Source":
         new_node = models.Node(
             name=title,
@@ -912,7 +914,7 @@ async def drop_node_confirm(
     folder_type: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    import json
+
     
     provider = "local_dir"
     config = {"path": path}
@@ -941,7 +943,7 @@ async def drop_node_confirm(
 
 @router.get("/modal/edit/{node_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def edit_node_modal(request: Request, node_id: int, db: Session = Depends(get_db)):
-    import json
+
     node = db.query(models.Node).filter(models.Node.id == node_id).first()
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
@@ -961,7 +963,7 @@ async def edit_node_submit(
     node_id: int,
     db: Session = Depends(get_db)
 ):
-    import json
+
     node = db.query(models.Node).filter(models.Node.id == node_id).first()
     if not node:
         raise HTTPException(status_code=404, detail="Node not found")
@@ -971,8 +973,8 @@ async def edit_node_submit(
     provider = form_data.get("provider")
     image_url = form_data.get("image_url", "")
     allowed_macs = form_data.get("allowed_macs", "")
-    use_transcoding = form_data.get("use_transcoding") == "true"
-    is_continuous_stream = form_data.get("is_continuous_stream") == "true"
+    use_transcoding = form_data.get("use_transcoding") is not None
+    is_continuous_stream = form_data.get("is_continuous_stream") is not None
         
     node.name = name
     node.provider = provider

@@ -15,8 +15,9 @@ def stream_local_file(file_path: str, request: Request):
         raise HTTPException(status_code=404, detail="File not found")
 
     def iterfile():
-        with open(file_path, mode="rb") as file_like:
-            yield from file_like
+        with open(file_path, mode="rb") as f:
+            while chunk := f.read(1024 * 1024):
+                yield chunk
 
     return StreamingResponse(iterfile(), media_type="audio/mpeg")
 
