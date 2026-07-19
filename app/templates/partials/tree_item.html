@@ -1,19 +1,29 @@
 {% macro render_node(node, selected_node_id) %}
 {% set is_folder = node.provider in ['folder', 'local_dir', 'smb'] %}
-<div x-data="{ expanded: $persist({% if node.id == selected_node_id %}true{% else %}false{% endif %}).as('tree_{{ node.id }}'), drag: false, loaded: false }"
+<div x-data="{ expanded: $persist({% if node.id == selected_node_id %}true{% else %}false{% endif %}).as('tree_{{ node.id }}'), drag: false, loaded: false, dragPos: '' }"
  x-init="if(expanded && !loaded) { htmx.ajax('GET', '/admin/nodes/{{ node.id }}/children', {target: '#children-{{ node.id }}'}); loaded = true; }"
- {% if is_folder %}
- @dragover.prevent.stop="$event.dataTransfer.dropEffect ='copy'; drag = true"
+ @dragover.prevent.stop="$event.dataTransfer.dropEffect ='copy'; 
+    drag = true;
+    let rect = $event.currentTarget.firstElementChild.getBoundingClientRect(); 
+    let y = $event.clientY - rect.top; 
+    if (y < rect.height * 0.25) dragPos = 'before'; 
+    else if (y > rect.height * 0.75) dragPos = 'after'; 
+    else dragPos = '{% if is_folder %}inside{% else %}after{% endif %}';"
  @dragenter.prevent.stop="drag = true"
- @dragleave.prevent.stop="if (!$event.currentTarget.contains($event.relatedTarget)) drag = false"
- @drop.stop.prevent="drag = false; handleDrop($event, {{ node.id }})"
- {% endif %}>
+ @dragleave.prevent.stop="if (!$event.currentTarget.contains($event.relatedTarget)) { drag = false; dragPos = ''; }"
+ @drop.stop.prevent="handleDrop($event, {{ node.id }}, dragPos); drag = false; dragPos = '';"
+ >
  <div @click="if (!$event.target.closest('button') && !$event.target.closest('input')) { expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET', '/admin/nodes/{{ node.id }}/children', {target: '#children-{{ node.id }}'}); loaded = true; } }"
  data-id="{{ node.id }}"
  draggable="true"
  ondragstart="event.dataTransfer.setData('application/json', JSON.stringify({type: 'node', id: {{ node.id }}}))"
  class="tree-node-row drop-zone flex items-center justify-between group cursor-pointer py-2 hover:bg-surface-container-high rounded px-2 -ml-2 transition-all border-2 {% if node.id == selected_node_id %}bg-surface-container-high font-bold{% endif %}"
- :class="drag ?'border-primary bg-primary-container/20' :'border-transparent'">
+ :class="{
+    'border-t-primary border-transparent border-b-transparent border-l-transparent border-r-transparent': dragPos === 'before',
+    'border-b-primary border-transparent border-t-transparent border-l-transparent border-r-transparent': dragPos === 'after',
+    'border-primary bg-primary-container/20': dragPos === 'inside',
+    'border-transparent': dragPos === ''
+ }">
  <div class="flex items-center gap-2 pointer-events-none flex-1 overflow-hidden">
  <input type="checkbox" name="selected_nodes" value="{{ node.id }}" class="pointer-events-auto rounded border-outline-variant text-primary focus:ring-primary/20 shrink-0" @click.stop>
  {% if is_folder %}

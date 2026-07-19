@@ -148,7 +148,7 @@
             --color-surface-bright: #ffffff;
             --color-surface-container-lowest: #ffffff;
             --color-surface-container-low: #f8f9fa;
-            --color-surface-container: #e9ecef;
+            --color-surface-container: #e2e5e9;
             --color-surface-container-high: #dee2e6;
             --color-surface-container-highest: #ced4da;
             --color-surface-dim: #dee2e6;
@@ -188,7 +188,7 @@
             --color-error-container: #ffdad6;
             --color-on-error-container: #93000a;
             --color-outline: #4c4b5b;
-            --color-outline-variant: #8c899d;
+            --color-outline-variant: #6b687a;
             --color-surface-tint: #494bd6;
         }
         .dark {
@@ -301,15 +301,19 @@ x-transition.opacity.duration.100ms
 style="display: none;">
     
     <button @click="window.playTestStream(nodeId)" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high flex items-center gap-2">
-        <span class="material-symbols-outlined text-sm">play_arrow</span> Test Play
+        <span class="material-symbols-outlined text-sm">play_arrow</span> {{ _("Test Play") }}
     </button>
     
     <button @click="htmx.ajax('GET', '/admin/modal/edit/' + nodeId, {target: 'body', swap: 'beforeend'})" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high flex items-center gap-2">
-        <span class="material-symbols-outlined text-sm">edit</span> Edit Node
+        <span class="material-symbols-outlined text-sm">edit</span> {{ _("Edit Node") }}
+    </button>
+
+    <button @click="htmx.ajax('POST', '/admin/nodes/' + nodeId + '/duplicate', {target: '#explorer-tree', select: '#explorer-tree', swap: 'outerHTML'})" class="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-high flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">content_copy</span> {{ _("Duplicate Node") }}
     </button>
     
     <button @click="htmx.ajax('DELETE', '/admin/nodes/' + nodeId, {target: '#explorer-tree', select: '#explorer-tree', swap: 'outerHTML'})" class="w-full text-left px-4 py-2 text-sm text-error hover:bg-error-container hover:text-on-error-container flex items-center gap-2">
-        <span class="material-symbols-outlined text-sm">delete</span> Delete Node
+        <span class="material-symbols-outlined text-sm">delete</span> {{ _("Delete Node") }}
     </button>
 
 </div>

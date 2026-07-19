@@ -84,7 +84,7 @@
 </main>
 
 <script>
-function handleDrop(event, parentId) {
+function handleDrop(event, parentId, position = 'inside') {
     event.preventDefault();
     const dataStr = event.dataTransfer.getData("application/json");
     if (!dataStr) return;
@@ -97,7 +97,7 @@ function handleDrop(event, parentId) {
             
             const formData = new FormData();
             formData.append('target_id', parentId);
-            formData.append('position', 'inside'); // Default to inside for now
+            formData.append('position', position);
             
             fetch(`/admin/nodes/${item.id}/move`, {
                 method: 'POST',

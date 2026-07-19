@@ -9,7 +9,7 @@ class WebStreamProvider(MediaProvider):
     @property
     def icon(self) -> str: return "add_link"
     @property
-    def allow_as_source(self) -> bool: return False
+    def allow_as_source(self) -> bool: return True
     @property
     def allow_as_node(self) -> bool: return True
     @property
@@ -22,7 +22,17 @@ class WebStreamProvider(MediaProvider):
         return config.get("url", "")
     
     def browse_folder(self, config: Dict[str, Any], node_id: int) -> List[Dict[str, Any]]:
-        return []
+        url = config.get("url", "")
+        if not url:
+            return []
+        # Return itself as the only item in the source
+        return [{
+            "id": "single_stream",
+            "name": "Web Stream", # Will be overridden by Source name in UI if needed
+            "type": "audio",
+            "config": {"url": url},
+            "provider": "web_stream"
+        }]
 
 class WebStreamListProvider(MediaProvider):
     @property

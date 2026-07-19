@@ -407,25 +407,28 @@ async def browse_smb_modal_path(
     directories = []
     error = None
     
-    smb_host = smb_host or ""
-    smb_path = smb_path or ""
-    target_path = target_path or ""
+    smb_host = smb_host.strip() if smb_host else ""
+    smb_path = smb_path.strip() if smb_path else ""
+    target_path = target_path.strip() if target_path else ""
     
-    try:
-        unc_path = r"\\" + f"{smb_host}\\{smb_path}\\{target_path}"
-        unc_path = unc_path.rstrip('\\')
-        
-        if smb_user:
-            smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
-        else:
-            smbclient.register_session(smb_host, username="guest", password="")
+    if not smb_host:
+        error = "Host is required to browse."
+    else:
+        try:
+            unc_path = r"\\" + f"{smb_host}\\{smb_path}\\{target_path}".replace('/', '\\')
+            unc_path = unc_path.rstrip('\\')
             
-        for entry in smbclient.scandir(unc_path):
-            if entry.is_dir():
-                directories.append(entry.name)
-    except Exception as e:
-        error = f"Failed to connect: {str(e)}"
-        
+            if smb_user:
+                smbclient.register_session(smb_host, username=smb_user, password=smb_pass)
+            else:
+                smbclient.register_session(smb_host, username="guest", password="")
+                
+            for entry in smbclient.scandir(unc_path):
+                if entry.is_dir():
+                    directories.append(entry.name)
+        except Exception as e:
+            error = f"Failed to connect: {str(e)}"
+            
     return templates.TemplateResponse(request=request, name="partials/modal_smb_browse.html", context={
         "request": request,
         "base_url": base_url,
@@ -1048,6 +1051,27 @@ async def move_node(request: Request, node_id: int, target_id: int = Form(...), 
         except Exception:
             db.rollback()
             
+    return render_explorer_tree(request, db)
+
+@router.post("/nodes/{node_id}/duplicate", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def duplicate_node(request: Request, node_id: int, db: Session = Depends(get_db)):
+    node = db.query(models.Node).filter(models.Node.id == node_id).first()
+    if not node:
+        raise HTTPException(status_code=404, detail="Node not found")
+        
+    new_node = models.Node(
+        name=f"{node.name} (Copy)",
+        provider=node.provider,
+        provider_config=node.provider_config,
+        image_url=node.image_url,
+        allowed_macs=node.allowed_macs,
+        use_transcoding=node.use_transcoding,
+        is_continuous_stream=node.is_continuous_stream,
+        parent_id=node.parent_id
+    )
+    db.add(new_node)
+    db.commit()
+    
     return render_explorer_tree(request, db)
 
 @router.delete("/nodes/{node_id}", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])

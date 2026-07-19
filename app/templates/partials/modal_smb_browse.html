@@ -1,4 +1,4 @@
-<div id="modal-backdrop-smb" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })" @click.stop>
+<div id="modal-backdrop-smb-browse" class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50" x-data="{ open: true }" x-show="open" x-init="$watch('open', value => { if(!value) setTimeout(() => $el.remove(), 200) })" @click.stop>
  <div class="bg-surface rounded-xl shadow-lg w-[500px] p-6 max-h-[90vh] overflow-hidden flex flex-col" @click.away="open = false">
  <h2 class="text-headline-md mb-4 text-on-surface">Browse SMB Share</h2>
  <form id="smb-modal-browse-form">
@@ -23,7 +23,7 @@
  <div class="flex-1 overflow-y-auto border border-outline-variant rounded-lg bg-surface-container-low mb-4">
  {% if current_path %}
  {% set parent_path = current_path.rsplit('\\', 1)[0] if '\\' in current_path else '' %}
- <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb" hx-swap="outerHTML" 
+ <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb-browse" hx-swap="outerHTML" 
  hx-include="#smb-modal-browse-form" hx-vals='{"target_path": "{{ parent_path }}"}'
  class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
  <span class="material-symbols-outlined text-primary group-hover:-translate-y-1 transition-transform">arrow_upward</span>
@@ -32,7 +32,7 @@
  {% endif %}
 
  {% for dir in directories %}
- <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb" hx-swap="outerHTML"
+ <button hx-post="/admin/smb/browse_modal_path" hx-target="#modal-backdrop-smb-browse" hx-swap="outerHTML"
  hx-include="#smb-modal-browse-form" hx-vals='{"target_path": "{{ current_path }}{% if current_path %}\\{% endif %}{{ dir }}"}'
  class="w-full flex items-center gap-3 p-3 hover:bg-surface-container-high rounded-lg transition-colors text-left group">
  <span class="material-symbols-outlined text-primary">folder</span>
