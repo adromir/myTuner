@@ -51,8 +51,9 @@ async def stream_media(request: Request, node_id: str, db: Session = Depends(get
     if not stream_url:
         raise HTTPException(status_code=404, detail="Stream URL not found")
         
-    # TODO: Implement FFmpeg transcoding here if node.use_transcoding is True
-    # For now, just redirect or stream directly
+    if node.use_transcoding:
+        from ..core.streamer import stream_transcoded
+        return stream_transcoded(stream_url, request)
     
     if stream_url.startswith("http://") or stream_url.startswith("https://"):
         return RedirectResponse(url=stream_url, status_code=302)

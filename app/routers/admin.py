@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from ..providers import get_all_providers, get_provider
+from ..core.i18n import I18nJinja2Templates
 
 logger = logging.getLogger(__name__)
 
@@ -21,20 +22,20 @@ AVATAR_MAX_SIZE = 2 * 1024 * 1024  # 2 MB
 MIN_PASSWORD_LENGTH = 4
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-templates = Jinja2Templates(directory="app/templates")
+templates = I18nJinja2Templates(directory="app/templates")
 templates.env.globals["get_all_providers"] = get_all_providers
 templates.env.globals["get_provider"] = get_provider
 
 
 def render_explorer_tree(request: Request, db: Session):
     """Helper to re-render the explorer tree partial after mutations."""
-    nodes = db.query(models.Node).all()
+    root_nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     sources = db.query(models.Source).all()
     return templates.TemplateResponse(request=request, name="partials/main_content.html", context={
         "request": request,
         "selected_node": None,
-        "list_nodes": [n for n in nodes if n.parent_id is None],
-        "all_nodes": nodes,
+        "list_nodes": root_nodes,
+        "all_nodes": root_nodes,
         "sources": sources
     })
 
@@ -82,25 +83,22 @@ async def logout(response: Response):
 
 @router.get("/", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
 async def admin_dashboard(request: Request, db: Session = Depends(get_db)):
-    nodes = db.query(models.Node).all()
-    root_nodes = [n for n in nodes if n.parent_id is None]
+    root_nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     sources = db.query(models.Source).all()
     
-    # Check if this is an HTMX request for the root content or full page load
     if "hx-request" in request.headers and "hx-target" in request.headers:
-        # Client just wants the right-side main content for the root
         return templates.TemplateResponse(request=request, name="partials/main_content.html", context={
             "request": request,
             "selected_node": None,
             "list_nodes": root_nodes,
-            "all_nodes": nodes,
+            "all_nodes": [],
             "sources": sources
         })
 
     return templates.TemplateResponse(request=request, name="admin.html", context={
         "request": request,
         "nodes": root_nodes,
-        "all_nodes": nodes,
+        "all_nodes": [],
         "selected_node": None,
         "list_nodes": root_nodes,
         "sources": sources
@@ -113,12 +111,22 @@ async def get_node_content(request: Request, node_id: int, db: Session = Depends
         raise HTTPException(status_code=404)
         
     children = db.query(models.Node).filter(models.Node.parent_id == node_id).all()
+    root_nodes = db.query(models.Node).filter(models.Node.parent_id == None).all()
     return templates.TemplateResponse(request=request, name="partials/main_content.html", context={
         "request": request,
         "selected_node": node,
         "list_nodes": children,
-        "all_nodes": db.query(models.Node).all(),
+        "all_nodes": [],
         "sources": db.query(models.Source).all()
+    })
+
+@router.get("/nodes/{node_id}/children", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
+async def get_node_children(request: Request, node_id: int, db: Session = Depends(get_db)):
+    children = db.query(models.Node).filter(models.Node.parent_id == node_id).all()
+    return templates.TemplateResponse(request=request, name="partials/children_list.html", context={
+        "request": request,
+        "children": children,
+        "selected_node_id": None
     })
 
 @router.get("/logs", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])

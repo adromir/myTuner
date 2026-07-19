@@ -14,23 +14,23 @@
 <nav class="flex-1 space-y-1 overflow-y-auto px-3">
 <a @click="activeTab ='dashboard'" :class="activeTab ==='dashboard' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/" hx-target="body" hx-push-url="true">
 <span class="material-symbols-outlined" data-icon="playlist_play">playlist_play</span>
-<span>Playlists</span>
+<span>{{ _("Playlists") }}</span>
 </a>
 <a @click="activeTab ='sources'" :class="activeTab ==='sources' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/sources" hx-target="#main-content" hx-swap="innerHTML">
 <span class="material-symbols-outlined" data-icon="hub">hub</span>
-<span>Sources</span>
+<span>{{ _("Sources") }}</span>
 </a>
 <a @click="activeTab ='clients'" :class="activeTab ==='clients' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/clients" hx-target="#main-content" hx-swap="innerHTML">
 <span class="material-symbols-outlined" data-icon="devices">devices</span>
-<span>Clients</span>
+<span>{{ _("Clients") }}</span>
 </a>
 <a @click="activeTab ='profile'" :class="activeTab ==='profile' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/profile" hx-target="#main-content" hx-swap="innerHTML">
 <span class="material-symbols-outlined" data-icon="person">person</span>
-<span>Profile</span>
+<span>{{ _("Profile") }}</span>
 </a>
 <a @click="activeTab ='settings'" :class="activeTab ==='settings' ?'text-primary font-bold bg-primary-container/10 border-l-2 border-primary' :'text-on-surface-variant hover:bg-surface-container-high :bg-surface-variant border-l-2 border-transparent'" class="flex items-center gap-3 px-3 py-2 transition-all cursor-pointer" hx-get="/admin/settings" hx-target="#main-content" hx-swap="innerHTML">
 <span class="material-symbols-outlined" data-icon="settings">settings</span>
-<span>Settings</span>
+<span>{{ _("Settings") }}</span>
 </a>
 </nav>
 <div class="mt-auto px-3 pt-4 border-t border-outline-variant/30">

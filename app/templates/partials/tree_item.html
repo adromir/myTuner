@@ -1,12 +1,14 @@
 {% macro render_node(node, selected_node_id) %}
-<div x-data="{ expanded: $persist({% if node.id == selected_node_id %}true{% else %}false{% endif %}).as('tree_{{ node.id }}'), drag: false }"
- {% if node.provider in ['folder','local_dir','smb'] %}
+{% set is_folder = node.provider in ['folder', 'local_dir', 'smb'] %}
+<div x-data="{ expanded: $persist({% if node.id == selected_node_id %}true{% else %}false{% endif %}).as('tree_{{ node.id }}'), drag: false, loaded: false }"
+ x-init="if(expanded && !loaded) { htmx.ajax('GET', '/admin/nodes/{{ node.id }}/children', {target: '#children-{{ node.id }}'}); loaded = true; }"
+ {% if is_folder %}
  @dragover.prevent.stop="$event.dataTransfer.dropEffect ='copy'; drag = true"
  @dragenter.prevent.stop="drag = true"
  @dragleave.prevent.stop="if (!$event.currentTarget.contains($event.relatedTarget)) drag = false"
  @drop.stop.prevent="drag = false; handleDrop($event, {{ node.id }})"
  {% endif %}>
- <div @click="if (!$event.target.closest('button') && !$event.target.closest('input')) expanded = !expanded"
+ <div @click="if (!$event.target.closest('button') && !$event.target.closest('input')) { expanded = !expanded; if(expanded && !loaded) { htmx.ajax('GET', '/admin/nodes/{{ node.id }}/children', {target: '#children-{{ node.id }}'}); loaded = true; } }"
  data-id="{{ node.id }}"
  draggable="true"
  ondragstart="event.dataTransfer.setData('application/json', JSON.stringify({type: 'node', id: {{ node.id }}}))"
@@ -14,7 +16,7 @@
  :class="drag ?'border-primary bg-primary-container/20' :'border-transparent'">
  <div class="flex items-center gap-2 pointer-events-none flex-1 overflow-hidden">
  <input type="checkbox" name="selected_nodes" value="{{ node.id }}" class="pointer-events-auto rounded border-outline-variant text-primary focus:ring-primary/20 shrink-0" @click.stop>
- {% if node.children %}
+ {% if is_folder %}
  <span class="material-symbols-outlined text-on-surface-variant text-lg transition-transform duration-200" :class="expanded ?'rotate-90' :''" data-icon="chevron_right">chevron_right</span>
  {% else %}
  <span class="material-symbols-outlined text-on-surface-variant text-lg opacity-0" data-icon="remove">remove</span>
@@ -52,11 +54,14 @@
  </div>
  </div>
  
- {% if node.children %}
+ {% if is_folder %}
  <div x-show="expanded" x-collapse x-cloak class="ml-8 mt-1 space-y-2 border-l border-outline/50 pl-4 relative">
- {% for child in node.children %}
- {{ render_node(child, selected_node_id) }}
- {% endfor %}
+     <div id="children-{{ node.id }}">
+         <!-- HTMX injects children here -->
+         <div class="flex items-center text-sm text-on-surface-variant p-2 opacity-50">
+             <span class="material-symbols-outlined animate-spin text-sm mr-2" style="animation-duration: 3s">sync</span> Loading...
+         </div>
+     </div>
  </div>
  {% endif %}
 </div>

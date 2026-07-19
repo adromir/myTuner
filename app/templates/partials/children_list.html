@@ -1,0 +1,4 @@
+{% from 'partials/tree_item.html' import render_node %}
+{% for child in children %}
+  {{ render_node(child, selected_node_id) }}
+{% endfor %}
