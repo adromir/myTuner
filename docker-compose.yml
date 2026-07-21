@@ -7,5 +7,6 @@ services:
       - "80:80"
     volumes:
       - ./data:/app/data
+      - ./plugins:/app/plugins
     environment:
       - TZ=Europe/Berlin

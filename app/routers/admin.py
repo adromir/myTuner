@@ -14,6 +14,7 @@ from pathlib import Path
 
 from ..providers import get_all_providers, get_provider
 from ..core.i18n import I18nJinja2Templates
+from ..core.dynamic_nodes import build_dynamic_children, decode_dynamic_id, DynamicNode
 
 logger = logging.getLogger(__name__)
 
@@ -121,8 +122,48 @@ async def get_node_content(request: Request, node_id: int, db: Session = Depends
     })
 
 @router.get("/nodes/{node_id}/children", response_class=HTMLResponse, dependencies=[Depends(verify_admin)])
-async def get_node_children(request: Request, node_id: int, db: Session = Depends(get_db)):
-    children = db.query(models.Node).filter(models.Node.parent_id == node_id).all()
+async def get_node_children(request: Request, node_id: str, db: Session = Depends(get_db)):
+    children = []
+    
+    if node_id.startswith("dyn_"):
+        payload = decode_dynamic_id(node_id)
+        if payload:
+            provider_name = payload.get("p")
+            sub_config = payload.get("c", {})
+            use_transcoding = payload.get("t", False)
+            allowed_macs = payload.get("m")
+            children = build_dynamic_children(provider_name, sub_config, node_id, use_transcoding, allowed_macs)
+    else:
+        try:
+            db_node_id = int(node_id)
+            node = db.query(models.Node).filter(models.Node.id == db_node_id).first()
+            if node:
+                # 1. Database child nodes
+                db_children = db.query(models.Node).filter(models.Node.parent_id == db_node_id).all()
+                children.extend(db_children)
+                
+                # 2. Dynamic provider child items
+                if node.provider and node.provider != "folder":
+                    config = {}
+                    if node.provider_config:
+                        try:
+                            config = json.loads(node.provider_config)
+                        except Exception:
+                            pass
+                    if not isinstance(config, dict):
+                        config = {"url": node.provider_config, "path": node.provider_config}
+                        
+                    dyn_children = build_dynamic_children(
+                        node.provider,
+                        config,
+                        node.id,
+                        use_transcoding=node.use_transcoding,
+                        allowed_macs=node.allowed_macs
+                    )
+                    children.extend(dyn_children)
+        except ValueError:
+            pass
+
     return templates.TemplateResponse(request=request, name="partials/children_list.html", context={
         "request": request,
         "children": children,
